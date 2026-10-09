@@ -1,6 +1,6 @@
 # TV-Time
 Watch live Israeli TV channels
 
-[https://loteman.github.io/TV-Time/](https://loteman.github.io/TV-Time/)
+[https://tvtime.loteman.com/](https://tvtime.loteman.com/)
 
 Website By Loteman
