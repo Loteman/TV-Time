@@ -72,33 +72,44 @@ function avatarLabel(ch){
 }
 
 /* ---------- RENDER LIST ---------- */
-function renderList(){
-  const list = currentList();
+/* One set of filters (status, source, favorites, search) for both the
+   sidebar list and the all-channels page. */
+function matchesFilters(c){
+  if(!filterStatuses.has(c.status)) return false;
+  // a channel with a direct stream plays in the direct player (the page is
+  // only its fallback), so it counts as "stream"; the rest are "site"
+  if(!filterSources.has(c.stream ? 'stream' : 'site')) return false;
+  if(showFavOnly && !favorites.has(c.id)) return false;
   const term = searchTerm.trim().toLowerCase();
+  if(term && !c.name.toLowerCase().includes(term)) return false;
+  return true;
+}
 
-  const filtered = list.filter(c => {
-    if(!filterStatuses.has(c.status)) return false;
-    // a channel with a direct stream plays in the direct player (the page is
-    // only its fallback), so it counts as "stream"; the rest are "site"
-    if(!filterSources.has(c.stream ? 'stream' : 'site')) return false;
-    if(showFavOnly && !favorites.has(c.id)) return false;
-    if(term && !c.name.toLowerCase().includes(term)) return false;
-    return true;
-  });
+function emptyListMessage(list){
+  if(showFavOnly) return 'אין ערוצים במועדפים';
+  if(list.some(c => c.status === 'idle' || c.status === 'testing')){
+    return 'בודק ערוצים... ערוצים יתווספו לרשימה ברגע שהבדיקה תסתיים';
+  }
+  return 'לא נמצאו ערוצים התואמים לסינון שנבחר';
+}
+
+/* Re-renders every view that lists channels - called on any filter,
+   favorite or status change. */
+function renderList(){
+  renderSidebarList();
+  if(viewingAllChannels) renderAllChannelsView();
+}
+
+function renderSidebarList(){
+  const list = currentList();
+  const filtered = list.filter(matchesFilters);
 
   channelListEl.innerHTML = '';
 
   if(filtered.length === 0){
     const div = document.createElement('div');
     div.className = 'empty-search';
-    const stillTesting = list.some(c => c.status === 'idle' || c.status === 'testing');
-    if(showFavOnly){
-      div.textContent = 'אין ערוצים במועדפים';
-    } else if(stillTesting){
-      div.textContent = 'בודק ערוצים... ערוצים יתווספו לרשימה ברגע שהבדיקה תסתיים';
-    } else {
-      div.textContent = 'לא נמצאו ערוצים התואמים לסינון שנבחר';
-    }
+    div.textContent = emptyListMessage(list);
     channelListEl.appendChild(div);
     return;
   }
@@ -840,22 +851,32 @@ function renderAllChannelsView(){
   const all = [...TV_CHANNELS, ...RADIO_CHANNELS];
   const radioGroupNames = new Set(RADIO_CHANNELS.map(c => c.group));
   const groups = {};
-  all.forEach(c => {
+  all.filter(matchesFilters).forEach(c => {
     if(!groups[c.group]) groups[c.group] = [];
     groups[c.group].push(c);
   });
 
   allChannelsContent.innerHTML = '';
 
+  if(Object.keys(groups).length === 0){
+    const div = document.createElement('div');
+    div.className = 'empty-search';
+    div.textContent = emptyListMessage(all);
+    allChannelsContent.appendChild(div);
+    return;
+  }
+
+  // a section title only appears when the filters leave something under it
   let insertedTvHeader = false;
   let insertedRadioHeader = false;
 
   Object.keys(groups).forEach(groupName => {
-    if(!insertedTvHeader){
+    const isRadioGroup = radioGroupNames.has(groupName);
+    if(!isRadioGroup && !insertedTvHeader){
       allChannelsContent.appendChild(makeSectionTitle('טלוויזיה', 'mdi:television-classic', 'tv'));
       insertedTvHeader = true;
     }
-    if(!insertedRadioHeader && radioGroupNames.has(groupName)){
+    if(isRadioGroup && !insertedRadioHeader){
       allChannelsContent.appendChild(makeSectionTitle('רדיו', 'mdi:radio', 'radio'));
       insertedRadioHeader = true;
     }
@@ -889,7 +910,16 @@ function renderAllChannelsView(){
       nameEl.className = 'ac-name';
       nameEl.textContent = c.name;
 
+      const fav = document.createElement('iconify-icon');
+      fav.className = 'ac-fav' + (favorites.has(c.id) ? ' on' : '');
+      fav.setAttribute('icon', favorites.has(c.id) ? 'mdi:star' : 'mdi:star-outline');
+      fav.addEventListener('click', (e) => {
+        e.stopPropagation();   // starring shouldn't open the channel
+        toggleFav(c.id);       // re-renders this page too
+      });
+
       card.appendChild(dot);
+      card.appendChild(fav);
       card.appendChild(avatar);
       card.appendChild(nameEl);
 
@@ -910,8 +940,16 @@ function renderAllChannelsView(){
   });
 }
 
+/* The search / filter / favorites row is a single element that moves between
+   the sidebar and the top of this page, so both views share the same
+   controls and the same state. */
+const channelTools = document.getElementById('channelTools');
+const acToolbar = document.getElementById('acToolbar');
+
 function showAllChannelsView(){
   viewingAllChannels = true;
+  filterPanel.classList.remove('open');
+  acToolbar.appendChild(channelTools);
   renderAllChannelsView();
   appMain.style.display = 'none';
   allChannelsOverlay.classList.add('open');
@@ -921,6 +959,8 @@ function showAllChannelsView(){
 
 function showMainView(){
   viewingAllChannels = false;
+  filterPanel.classList.remove('open');
+  statusProgress.before(channelTools);
   allChannelsOverlay.classList.remove('open');
   appMain.style.display = 'flex';
   allChannelsBtnIcon.setAttribute('icon', 'mdi:view-grid-outline');

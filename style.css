@@ -709,6 +709,11 @@ header{
   width:100%;
   margin:0 auto;
 }
+.ac-toolbar .search-wrap-mobile{
+  padding:0;
+  max-width:520px;
+  margin-bottom:22px;
+}
 .ac-group{margin-bottom:28px;}
 .ac-group-title{
   font-size:12px;
@@ -776,6 +781,19 @@ header{
 .ac-dot.ok{background:#3fce6f;}
 .ac-dot.blocked{background:#e0555f;}
 .ac-dot.timeout{background:#e0b30b;}
+.ac-fav{
+  position:absolute;
+  top:6px;
+  right:6px;
+  font-size:18px;
+  color:var(--surface3);
+  cursor:pointer;
+  transition:.12s;
+}
+.ac-card:hover .ac-fav{color:var(--muted);}
+.ac-fav.on,
+.ac-card:hover .ac-fav.on{color:var(--yellow);}
+.ac-fav:hover{color:var(--yellow) !important;}
 
 @media(max-width:700px){
   .ac-content{padding:14px;}

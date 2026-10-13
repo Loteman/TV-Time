@@ -117,7 +117,7 @@
         <span>רדיו</span>
       </div>
     </div>
-    <div class="search-wrap-mobile">
+    <div class="search-wrap-mobile" id="channelTools">
       <input id="searchMobile" type="text" placeholder="חיפוש ערוץ...">
       <div class="icon-btn" id="filterBtn" title="סינון ערוצים">
         <iconify-icon icon="mdi:filter-variant"></iconify-icon>
@@ -175,7 +175,10 @@
 </div>
 
 <div class="all-channels-overlay" id="allChannelsOverlay">
-  <div class="ac-content" id="allChannelsContent"></div>
+  <div class="ac-content">
+    <div class="ac-toolbar" id="acToolbar"></div>
+    <div id="allChannelsContent"></div>
+  </div>
 </div>
 
 <script src="channels.js"></script>
