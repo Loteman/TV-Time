@@ -39,11 +39,6 @@
         <iconify-icon icon="mdi:cog-outline"></iconify-icon>
         <span>הגדרות</span>
       </div>
-      <div class="settings-section-label">מקרא לייב / לא לייב</div>
-      <div class="legend-col">
-        <span><span class="ac-live-badge live badge-inline">LIVE</span>שידור חי ורציף</span>
-        <span><span class="ac-live-badge not-live badge-inline">LIVE</span>תוכן שאינו שידור רציף (למשל תכנים מוקלטים)</span>
-      </div>
       <div class="settings-section-label">מקרא סטטוס ערוצים</div>
       <div class="legend-col">
         <span><span class="status-dot ok"></span>עובד</span>
@@ -132,16 +127,16 @@
           <iconify-icon icon="mdi:filter-variant"></iconify-icon>
           <span>סינון ערוצים</span>
         </div>
-        <div class="settings-section-label">שידור</div>
-        <div class="filter-chip-group">
-          <label class="filter-chip"><input type="checkbox" id="chkLive" checked><span>לייב</span></label>
-          <label class="filter-chip"><input type="checkbox" id="chkNotLive"><span>לא לייב</span></label>
-        </div>
         <div class="settings-section-label">סטטוס בדיקה</div>
         <div class="filter-chip-group">
           <label class="filter-chip status-chip-ok"><input type="checkbox" id="chkOk" checked><span>עובד</span></label>
           <label class="filter-chip status-chip-timeout"><input type="checkbox" id="chkTimeout"><span>לא ברור</span></label>
           <label class="filter-chip status-chip-blocked"><input type="checkbox" id="chkBlocked"><span>חסום</span></label>
+        </div>
+        <div class="settings-section-label">מקור ניגון</div>
+        <div class="filter-chip-group">
+          <label class="filter-chip" title="ערוצים עם שידור ישיר, שמתנגנים בנגן של האתר"><input type="checkbox" id="chkStream" checked><span>נגן ישיר</span></label>
+          <label class="filter-chip" title="ערוצים בלי שידור ישיר, שמוצגים דרך אתר המשדר"><input type="checkbox" id="chkSite" checked><span>אתר המשדר</span></label>
         </div>
         <div class="retest-btn" id="filterResetBtn">
           <iconify-icon icon="mdi:backup-restore"></iconify-icon>

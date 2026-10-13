@@ -1,120 +1,141 @@
 /* ---------- CHANNEL DATA ----------
-   `url` is the broadcaster's page, shown in an iframe. `stream`, when present,
-   is a direct HLS stream (sourced from the iptv-org project) that plays in our
-   own <video>; the page stays available as a fallback and as a manual option. */
+   `url` is the broadcaster's page, shown in an iframe. `stream` is a direct
+   HLS stream (sourced from the iptv-org project) that plays in our own <video>.
+   A channel has at least one of them: with both, the stream plays first and
+   the page is the fallback and a manual option; stream-only channels have no
+   page to fall back to. `label` overrides the avatar text. */
 const TV_CHANNELS = [
-  {id:'ch7', name:'ערוץ 7', group:'חדשות ואקטואליה', color:'#1c8c5b', remoteNumber:7, isLive:true,
+  {id:'ch7', name:'ערוץ 7', group:'חדשות ואקטואליה', color:'#1c8c5b', remoteNumber:7,
    url:'https://sites.google.com/view/tv-here/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%98%D7%9C%D7%95%D7%95%D7%99%D7%96%D7%99%D7%94/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%90%D7%A7%D7%98%D7%95%D7%90%D7%9C%D7%99%D7%94-%D7%95%D7%97%D7%93%D7%A9%D7%95%D7%AA/%D7%A2%D7%A8%D7%95%D7%A5-7?authuser=0'},
-  {id:'ch10', name:'הכלכלה 10', group:'חדשות ואקטואליה', color:'#e0555f', remoteNumber:10, isLive:true,
+  {id:'ch10', name:'הכלכלה 10', group:'חדשות ואקטואליה', color:'#e0555f', remoteNumber:10,
    url:'https://vod.tv10.co.il/live,12057/rw-10-bydwr-y,790191'},
-  {id:'kan11', name:'כאן 11', group:'חדשות ואקטואליה', color:'#2f6fed', remoteNumber:11, isLive:true,
+  {id:'kan11', name:'כאן 11', group:'חדשות ואקטואליה', color:'#2f6fed', remoteNumber:11,
    url:'https://www.kan.org.il/live/',
    stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/kan11/live.livx/playlist.m3u8'},
-  {id:'keshet12', name:'קשת 12', group:'חדשות ואקטואליה', color:'#0aa3a3', remoteNumber:12, isLive:true,
+  {id:'keshet12', name:'קשת 12', group:'חדשות ואקטואליה', color:'#0aa3a3', remoteNumber:12,
    url:'https://www.mako.co.il/mako-vod-live-tv/VOD-6540b8dcb64fd31006.htm?partner=headerNav'},
-  {id:'reshet13', name:'רשת 13', group:'חדשות ואקטואליה', color:'#dc6f1a', remoteNumber:13, isLive:true,
+  {id:'reshet13', name:'רשת 13', group:'חדשות ואקטואליה', color:'#dc6f1a', remoteNumber:13,
    url:'https://reshet.tv/live/',
    stream:'https://d2xg1g9o5vns8m.cloudfront.net/out/v1/0855d703f7d5436fae6a9c7ce8ca5075/index.m3u8'},
-  {id:'ch14', name:'ערוץ 14', group:'חדשות ואקטואליה', color:'#7a4fdc', remoteNumber:14, isLive:true,
+  {id:'ch14', name:'ערוץ 14', group:'חדשות ואקטואליה', color:'#7a4fdc', remoteNumber:14,
    url:'https://www.c14.co.il/live?t=1',
    stream:'https://r.il.cdn-redge.media/livehls/oil/ch14/live/ch14/live.livx/playlist.m3u8'},
-  {id:'i24news', name:'i24News', group:'חדשות ואקטואליה', color:'#c94f4f', remoteNumber:15, isLive:true,
+  {id:'i24news', name:'i24News', group:'חדשות ואקטואליה', color:'#c94f4f', remoteNumber:15,
    url:'https://video.i24news.tv/player/channel/69b17e029abd89c807678067',
    stream:'https://i24newshebrew-cdn.encoders.immergo.tv/master.m3u8'},
-  {id:'ch16', name:'ערוץ 16', group:'חדשות ואקטואליה', color:'#4f7fc9', remoteNumber:16, isLive:true,
+  {id:'ch16', name:'ערוץ 16', group:'חדשות ואקטואליה', color:'#4f7fc9', remoteNumber:16,
    url:'https://www.ch16.co.il/',
    stream:'https://ch16israel-cdn.encoders.immergo.tv/2/streamPlaylist.m3u8'},
-  {id:'makan33', name:'مكان 33', group:'חדשות ואקטואליה', color:'#b08a2e', remoteNumber:33, isLive:true,
+  {id:'makan33', name:'مكان 33', group:'חדשות ואקטואליה', color:'#b08a2e', remoteNumber:33,
    url:'https://www.kan.org.il/live/?stationId=4532#',
    stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/makan/live.livx/playlist.m3u8'},
-  {id:'knesset99', name:'כנסת 99', group:'חדשות ואקטואליה', color:'#6f9c4f', remoteNumber:99, isLive:true,
+  {id:'knesset99', name:'כנסת 99', group:'חדשות ואקטואליה', color:'#6f9c4f', remoteNumber:99,
    url:'https://www.knesset.tv/live/',
    stream:'https://contact.gostreaming.tv/Knesset/myStream/playlist.m3u8'},  // only live during sessions
-  {id:'disney', name:'דיסני', group:'ילדים', color:'#1f5fcf', isLive:false,
-   url:'https://sites.google.com/view/tv-here/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%98%D7%9C%D7%95%D7%95%D7%99%D7%96%D7%99%D7%94/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%99%D7%9C%D7%93%D7%99%D7%9D/%D7%93%D7%99%D7%A1%D7%A0%D7%99?authuser=0'},
-  {id:'chinuchit', name:'כאן החינוכית', group:'ילדים', color:'#2f6fed', isLive:true,
+  {id:'chinuchit', name:'כאן החינוכית', group:'ילדים', color:'#2f6fed',
    url:'https://www.kan.org.il/live/?stationId=4471#'},
-  {id:'yeladim', name:'ערוץ הילדים', group:'ילדים', color:'#e05fa0', isLive:false,
-   url:'https://sites.google.com/view/tv-here/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%98%D7%9C%D7%95%D7%95%D7%99%D7%96%D7%99%D7%94/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%99%D7%9C%D7%93%D7%99%D7%9D/%D7%A2%D7%A8%D7%95%D7%A5-%D7%94%D7%99%D7%9C%D7%93%D7%99%D7%9D?authuser=0'},
-  {id:'luli', name:'לולי', group:'ילדים', color:'#dc4f8a', isLive:false,
-   url:'https://sites.google.com/view/tv-here/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%98%D7%9C%D7%95%D7%95%D7%99%D7%96%D7%99%D7%94/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%99%D7%9C%D7%93%D7%99%D7%9D/%D7%9C%D7%95%D7%9C%D7%99?authuser=0'},
-  {id:'hop', name:'הופ', group:'ילדים', color:'#4fb0dc', isLive:false,
-   url:'https://sites.google.com/view/tv-here/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%98%D7%9C%D7%95%D7%95%D7%99%D7%96%D7%99%D7%94/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%99%D7%9C%D7%93%D7%99%D7%9D/%D7%94%D7%95%D7%A4?authuser=0'},
-  {id:'zoom', name:'זום', group:'ילדים', color:'#7a4fdc', isLive:false,
-   url:'https://sites.google.com/view/tv-here/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%98%D7%9C%D7%95%D7%95%D7%99%D7%96%D7%99%D7%94/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%99%D7%9C%D7%93%D7%99%D7%9D/%D7%96%D7%95%D7%9D?authuser=0'},
-  {id:'wiz', name:'Wiz', group:'ילדים', color:'#dc8a1a', isLive:false,
-   url:'https://sites.google.com/view/tv-here/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%98%D7%9C%D7%95%D7%95%D7%99%D7%96%D7%99%D7%94/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%99%D7%9C%D7%93%D7%99%D7%9D/wiz?authuser=0'},
-  {id:'baby', name:'בייבי', group:'ילדים', color:'#dc4f6f', isLive:false,
-   url:'https://sites.google.com/view/tv-here/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%98%D7%9C%D7%95%D7%95%D7%99%D7%96%D7%99%D7%94/%D7%A2%D7%A8%D7%95%D7%A6%D7%99-%D7%99%D7%9C%D7%93%D7%99%D7%9D/%D7%91%D7%99%D7%99%D7%91%D7%99?authuser=0'},
-  {id:'ch24', name:'ערוץ 24', group:'תרבות, בידור ומוזיקה', color:'#1c8c5b', isLive:true,
+  {id:'ch24', name:'ערוץ 24', group:'תרבות, בידור ומוזיקה', color:'#1c8c5b',
    url:'https://www.mako.co.il/mako-vod-live-tv/VOD-b3480d2eff3fd31006.htm?sCh=3377c13070733210&pId=935020712'},
+  {id:'hidabroot', name:'הידברות', group:'דת ומסורת', color:'#4f9ddc',
+   stream:'https://cdn.cybercdn.live/HidabrootIL/Live97/playlist.m3u8'},
+  {id:'shelanu', name:'שלנו TV', group:'דת ומסורת', color:'#b08a2e',
+   stream:'https://1247634592.rsc.cdn77.org/1247634592/playlist.m3u8'},
+  {id:'kabbalah', name:'קבלה לעם', group:'דת ומסורת', color:'#7a4fdc',
+   stream:'https://edge3.uk.kab.tv/live/tv66-heb-high/playlist.m3u8'},  // not 24/7
+  {id:'ch9', name:'ערוץ 9', group:'בשפות אחרות', color:'#3f8fd8', remoteNumber:9,
+   stream:'https://contact.gostreaming.tv/Con-11/index.m3u8'},
+  {id:'i24en', name:'i24News English', group:'בשפות אחרות', color:'#c94f4f', label:'EN',
+   stream:'https://i24newsenglish-cdn.encoders.immergo.tv/master.m3u8'},
+  {id:'i24fr', name:'i24News Français', group:'בשפות אחרות', color:'#c94f4f', label:'FR',
+   stream:'https://i24newsfrench-cdn.encoders.immergo.tv/master.m3u8'},
+  {id:'i24ar', name:'i24News عربي', group:'בשפות אחרות', color:'#c94f4f', label:'AR',
+   stream:'https://i24newsarabic-cdn.encoders.immergo.tv/master.m3u8'},
+  {id:'halatv', name:'הלא TV', group:'בשפות אחרות', color:'#dc8a4f',
+   stream:'https://stream.panet.com/edge/halaTV/playlist.m3u8'},  // not 24/7
 ];
 
 const RADIO_CHANNELS = [
   /* Galei Tzahal (IDF radio) - national */
-  {id:'galgalatz', name:'גלגל"צ', group:'רדיו ארצי - גלי צה"ל', color:'#4fc3dc', isLive:true,
+  {id:'galgalatz', name:'גלגל"צ', group:'רדיו ארצי - גלי צה"ל', color:'#4fc3dc',
    url:'https://glz.co.il/%D7%92%D7%9C%D7%92%D7%9C%D7%A6/'},
-  {id:'galatz', name:'גל"צ', group:'רדיו ארצי - גלי צה"ל', color:'#2f9ddc', isLive:true,
+  {id:'galatz', name:'גל"צ', group:'רדיו ארצי - גלי צה"ל', color:'#2f9ddc',
    url:'https://glz.co.il/%D7%92%D7%9C%D7%A6/'},
 
   /* Israeli Public Broadcasting Corporation (Kan) */
-  {id:'reshetbet', name:'כאן ב׳', group:'רדיו תאגיד השידור (כאן)', color:'#e0555f', isLive:true,
+  {id:'reshetbet', name:'כאן ב׳', group:'רדיו תאגיד השידור (כאן)', color:'#e0555f',
    url:'https://www.kan.org.il/live/?stationId=4483#'},
-  {id:'kantarbut', name:'כאן תרבות', group:'רדיו תאגיד השידור (כאן)', color:'#1c8c5b', isLive:true,
+  {id:'kantarbut', name:'כאן תרבות', group:'רדיו תאגיד השידור (כאן)', color:'#1c8c5b',
    url:'https://www.kan.org.il/live/?stationId=4497#'},
-  {id:'kangimel', name:'כאן גימל', group:'רדיו תאגיד השידור (כאן)', color:'#dc6f1a', isLive:true,
+  {id:'kangimel', name:'כאן גימל', group:'רדיו תאגיד השידור (כאן)', color:'#dc6f1a',
    url:'https://www.kan.org.il/live/?stationId=4490#'},
-  {id:'kan88', name:'כאן 88', group:'רדיו תאגיד השידור (כאן)', color:'#7a4fdc', isLive:true,
+  {id:'kan88', name:'כאן 88', group:'רדיו תאגיד השידור (כאן)', color:'#7a4fdc',
    url:'https://www.kan.org.il/live/?stationId=4504#'},
-  {id:'kanreka', name:'כאן רק"ע', group:'רדיו תאגיד השידור (כאן)', color:'#b08a2e', isLive:true,
+  {id:'kanreka', name:'כאן רק"ע', group:'רדיו תאגיד השידור (כאן)', color:'#b08a2e',
    url:'https://www.kan.org.il/live/?stationId=4525#'},
-  {id:'kanmorasha', name:'כאן מורשת', group:'רדיו תאגיד השידור (כאן)', color:'#dc8a1a', isLive:true,
+  {id:'kanmorasha', name:'כאן מורשת', group:'רדיו תאגיד השידור (כאן)', color:'#dc8a1a',
    url:'https://www.kan.org.il/live/?stationId=4511#'},
-  {id:'kanmusic', name:'כאן קול המוסיקה', group:'רדיו תאגיד השידור (כאן)', color:'#e05fa0', isLive:true,
+  {id:'kanmusic', name:'כאן קול המוסיקה', group:'רדיו תאגיד השידור (כאן)', color:'#e05fa0',
    url:'https://www.kan.org.il/live/?stationId=4518#'},
-  {id:'kanarabic', name:'רדיו מכאן', group:'רדיו תאגיד השידור (כאן)', color:'#4fb0dc', isLive:true,
+  {id:'kanarabic', name:'רדיו מכאן', group:'רדיו תאגיד השידור (כאן)', color:'#4fb0dc',
    url:'https://www.kan.org.il/live/?stationId=358568#'},
 
   /* Regional stations */
-  {id:'kolbarama', name:'קול ברמה', group:'רדיו אזורי', color:'#8a6fdc', isLive:true,
+  {id:'kolbarama', name:'קול ברמה', group:'רדיו אזורי', color:'#8a6fdc',
    url:'https://kol-barama.co.il/live/'},
-  {id:'kolplay', name:'קול פליי', group:'רדיו אזורי', color:'#dc6fa0', isLive:true,
+  {id:'kolplay', name:'קול פליי', group:'רדיו אזורי', color:'#dc6fa0',
    url:'https://kol-play.co.il/'},
-  {id:'kolchai', name:'קול חי', group:'רדיו אזורי', color:'#4f9ddc', isLive:true,
+  {id:'kolchai', name:'קול חי', group:'רדיו אזורי', color:'#4f9ddc',
    url:'https://www.93fm.co.il/onair.html'},
-  {id:'kolchaimusic', name:'קול חי מיוזיק', group:'רדיו אזורי', color:'#4fdcc7', isLive:true,
+  {id:'kolchaimusic', name:'קול חי מיוזיק', group:'רדיו אזורי', color:'#4fdcc7',
    url:'https://kcm.fm/'},
-  {id:'radiodarom', name:'רדיו דרום', group:'רדיו אזורי', color:'#dc8a4f', isLive:true,
+  {id:'radiodarom', name:'רדיו דרום', group:'רדיו אזורי', color:'#dc8a4f',
    url:'https://www.radiodarom.co.il/'},
-  {id:'galeyisrael', name:'גלי ישראל', group:'רדיו אזורי', color:'#5b8fdc', isLive:true,
+  {id:'galeyisrael', name:'גלי ישראל', group:'רדיו אזורי', color:'#5b8fdc',
    url:'https://www.gly.co.il/'},
-  {id:'radius', name:'רדיוס', group:'רדיו אזורי', color:'#dc4f4f', isLive:true,
+  {id:'radius', name:'רדיוס', group:'רדיו אזורי', color:'#dc4f4f',
    url:'https://www.100fm.co.il/'},
-  {id:'radiusnostalgia', name:'רדיוס נוסטלגי', group:'רדיו אזורי', color:'#a3743f', isLive:true,
+  {id:'radiusnostalgia', name:'רדיוס נוסטלגי', group:'רדיו אזורי', color:'#a3743f',
    url:'https://digital.100fm.co.il/'},
-  {id:'levhamedina', name:'רדיו לב המדינה', group:'רדיו אזורי', color:'#4fdc8a', isLive:true,
+  {id:'levhamedina', name:'רדיו לב המדינה', group:'רדיו אזורי', color:'#4fdc8a',
    url:'https://www.91fm.co.il/'},
-  {id:'radiotzafon', name:'רדיו צפון', group:'רדיו אזורי', color:'#6f9c4f', isLive:true,
+  {id:'radiotzafon', name:'רדיו צפון', group:'רדיו אזורי', color:'#6f9c4f',
    url:'https://1045fm.maariv.co.il/'},
-  {id:'kolrega', name:'רדיו קול רגע', group:'רדיו אזורי', color:'#dcb04f', isLive:true,
+  {id:'kolrega', name:'רדיו קול רגע', group:'רדיו אזורי', color:'#dcb04f',
    url:'https://96fm.co.il/'},
-  {id:'radiojerusalem', name:'רדיו ירושלים', group:'רדיו אזורי', color:'#9c4fdc', isLive:true,
+  {id:'radiojerusalem', name:'רדיו ירושלים', group:'רדיו אזורי', color:'#9c4fdc',
    url:'https://www.jerusalemnet.co.il/'},
 ];
 
 /* ---------- STATE ---------- */
 let mode = 'tv';               // 'tv' | 'radio'
 let currentId = null;
-let favorites = new Set();     // in-memory only (no persistence between sessions)
+/* Favorites persist in localStorage. First-time visitors (nothing saved yet)
+   start with a default set; once the viewer changes their favorites, their
+   own list is kept - an empty one included. */
+const FAVORITES_KEY = 'tvtime:favorites';
+const DEFAULT_FAVORITES = ['kan11', 'keshet12', 'reshet13', 'ch14', 'chinuchit', 'galgalatz', 'galatz'];
+
+function loadFavorites(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY));
+    if(Array.isArray(saved)) return new Set(saved);
+  } catch(e){}   // storage blocked or corrupt - use the defaults
+  return new Set(DEFAULT_FAVORITES);
+}
+
+function saveFavorites(){
+  try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites])); } catch(e){}
+}
+
+let favorites = loadFavorites();
 let showFavOnly = false;
 let searchTerm = '';
 let brightnessValue = 100;
-let filterLive = new Set(['live']);              // 'live' | 'notlive'
 let filterStatuses = new Set(['ok']);            // 'ok' | 'timeout' | 'blocked'
+let filterSources = new Set(['stream', 'site']); // 'stream' (has a direct stream) | 'site' (page only)
 
-/* status: 'idle' | 'testing' | 'ok' | 'blocked' | 'timeout'
-   Not-live channels are marked blocked up front - see testOneChannel(). */
-[...TV_CHANNELS, ...RADIO_CHANNELS].forEach(c => c.status = c.isLive ? 'idle' : 'blocked');
+/* status: 'idle' | 'testing' | 'ok' | 'blocked' | 'timeout' */
+[...TV_CHANNELS, ...RADIO_CHANNELS].forEach(c => c.status = 'idle');
 
 /* ---------- ELEMENTS ---------- */
 const channelListEl = document.getElementById('channelList');
@@ -135,11 +156,11 @@ const settingsPanel = document.getElementById('settingsPanel');
 const filterBtn = document.getElementById('filterBtn');
 const filterPanel = document.getElementById('filterPanel');
 const filterResetBtn = document.getElementById('filterResetBtn');
-const chkLive = document.getElementById('chkLive');
-const chkNotLive = document.getElementById('chkNotLive');
 const chkOk = document.getElementById('chkOk');
 const chkTimeout = document.getElementById('chkTimeout');
 const chkBlocked = document.getElementById('chkBlocked');
+const chkStream = document.getElementById('chkStream');
+const chkSite = document.getElementById('chkSite');
 const searchDesktop = document.getElementById('searchDesktop');
 const searchMobile = document.getElementById('searchMobile');
 const zapPrev = document.getElementById('zapPrev');
@@ -155,7 +176,7 @@ function initials(name){
 }
 
 function avatarLabel(ch){
-  return ch.remoteNumber ? String(ch.remoteNumber) : initials(ch.name);
+  return ch.label || (ch.remoteNumber ? String(ch.remoteNumber) : initials(ch.name));
 }
 
 /* ---------- RENDER LIST ---------- */
@@ -164,13 +185,10 @@ function renderList(){
   const term = searchTerm.trim().toLowerCase();
 
   const filtered = list.filter(c => {
-    if(!filterLive.has(c.isLive ? 'live' : 'notlive')) return false;
-    // the status filter (ok/timeout/blocked) only makes sense for channels
-    // that got a real reachability test. "Not live" channels are always
-    // marked blocked without a test, so they're gated only by the
-    // live/not-live toggle - otherwise the default green-only filter would
-    // hide them even when "not live" is selected.
-    if(c.isLive && !filterStatuses.has(c.status)) return false;
+    if(!filterStatuses.has(c.status)) return false;
+    // a channel with a direct stream plays in the direct player (the page is
+    // only its fallback), so it counts as "stream"; the rest are "site"
+    if(!filterSources.has(c.stream ? 'stream' : 'site')) return false;
     if(showFavOnly && !favorites.has(c.id)) return false;
     if(term && !c.name.toLowerCase().includes(term)) return false;
     return true;
@@ -251,7 +269,7 @@ function renderList(){
    or blocked. We can't see past the wrapper's own JS, so these are
    reported as "unverifiable" instead of a false positive. */
 function isWrapperUrl(url){
-  return /sites\.google\.com/i.test(url);
+  return !!url && /sites\.google\.com/i.test(url);
 }
 
 /* Channels confirmed by hand to often fail in practice (player/JS-level
@@ -267,11 +285,11 @@ function isUnverifiable(ch){
 }
 
 function statusLabel(s, ch){
-  if(ch && !ch.isLive && s === 'blocked'){
-    return 'ערוץ לא לייב (תוכן מוקלט) - מסומן אוטומטית כחסום';
-  }
   if(ch && ch.stream && ch.streamOk && s === 'ok'){
     return 'השידור הישיר נבדק ועובד';
+  }
+  if(ch && !ch.url && s === 'blocked'){
+    return 'השידור הישיר לא זמין כרגע, ולערוץ הזה אין אתר משדר לגיבוי';
   }
   let text;
   if(ch && isUnverifiable(ch) && s === 'timeout'){
@@ -299,6 +317,7 @@ function statusLabel(s, ch){
    a cross-origin SecurityError (page works). If the frame stayed on our own
    origin (X-Frame-Options / CSP blocked it), that read succeeds (blocked). */
 function testLink(ch, timeoutMs){
+  if(!ch.url) return Promise.resolve(null);   // stream-only channel
   if(isUnverifiable(ch)) return Promise.resolve('timeout');
 
   return new Promise(resolve => {
@@ -365,14 +384,6 @@ async function testStream(ch, timeoutMs){
 }
 
 async function testOneChannel(ch, timeoutMs){
-  if(!ch.isLive){
-    // not-live channels are recorded content behind wrapper pages - they're
-    // marked blocked up front instead of being tested
-    ch.status = 'blocked';
-    renderList();
-    return;
-  }
-
   ch.status = 'testing';
   renderList();
 
@@ -383,14 +394,16 @@ async function testOneChannel(ch, timeoutMs){
   ch.streamOk = streamOk;
   ch.linkStatus = linkStatus;
   // the player tries a working stream first, otherwise the viewer gets the
-  // broadcaster page - so that's the status that counts
-  ch.status = streamOk ? 'ok' : linkStatus;
+  // broadcaster page - so that's the status that counts. A stream-only
+  // channel whose stream is down has nothing to show.
+  ch.status = streamOk ? 'ok' : (linkStatus || 'blocked');
   renderList();
 }
 
 const statusProgress = document.getElementById('statusProgress');
 const statusProgressText = document.getElementById('statusProgressText');
-let testRunId = 0;   // a newer run (e.g. the retest button) supersedes an older one
+let testRunId = 0;               // a newer run (e.g. the retest button) supersedes an older one
+const testsInFlight = new Set();  // ids being tested right now, by any run
 
 async function testChannels(list){
   const CONCURRENCY = 3;
@@ -405,8 +418,15 @@ async function testChannels(list){
   showProgress();
   const workers = new Array(CONCURRENCY).fill(null).map(async () => {
     while(queue.length && runId === testRunId){
-      const ch = queue.shift();
-      await testOneChannel(ch, 6000);
+      // favorites jump the queue - including ones starred while the run is going
+      const favIdx = queue.findIndex(c => favorites.has(c.id));
+      const ch = queue.splice(favIdx === -1 ? 0 : favIdx, 1)[0];
+      testsInFlight.add(ch.id);
+      try {
+        await testOneChannel(ch, 6000);
+      } finally {
+        testsInFlight.delete(ch.id);
+      }
       done++;
       showProgress();
     }
@@ -416,14 +436,18 @@ async function testChannels(list){
 }
 
 /* Every channel, TV and radio, is tested once when the site loads; switching
-   tabs only shows results that are already there. TV goes first since that's
-   the tab the site opens on. */
+   tabs only shows results that are already there. Order: favorites first,
+   then list order - all TV channels, then all radio. Each channel is tested
+   once per run, and one that an earlier run is still testing isn't queued
+   again (its fresh result is on the way). */
 function runAllTests(){
-  testChannels([...TV_CHANNELS, ...RADIO_CHANNELS]);
+  testChannels([...TV_CHANNELS, ...RADIO_CHANNELS].filter(c => !testsInFlight.has(c.id)));
 }
 
 document.getElementById('retestBtn').addEventListener('click', () => {
-  [...TV_CHANNELS, ...RADIO_CHANNELS].forEach(c => { if(c.isLive) c.status = 'idle'; });
+  [...TV_CHANNELS, ...RADIO_CHANNELS].forEach(c => {
+    if(!testsInFlight.has(c.id)) c.status = 'idle';
+  });
   renderList();
   runAllTests();
 });
@@ -431,6 +455,7 @@ document.getElementById('retestBtn').addEventListener('click', () => {
 function toggleFav(id){
   if(favorites.has(id)) favorites.delete(id);
   else favorites.add(id);
+  saveFavorites();
   renderList();
   if(id === currentId) updateNowPlayingFavIcon();
 }
@@ -515,7 +540,7 @@ function playVideo(seq){
 function startStream(ch){
   currentSource = 'stream';
   const seq = loadSeq;
-  const fail = () => { if(seq === loadSeq && currentSource === 'stream') fallbackToLink(ch); };
+  const fail = () => { if(seq === loadSeq && currentSource === 'stream') onStreamFailed(ch); };
 
   playerVideo.hidden = false;
   playerVideo.volume = volumeValue / 100;
@@ -547,16 +572,33 @@ function startStream(ch){
   }
 }
 
-function fallbackToLink(ch){
+const playerEmptyIcon = playerEmpty.querySelector('iconify-icon');
+const playerEmptyText = playerEmpty.querySelector('div');
+const PLAYER_EMPTY_DEFAULT = {icon: playerEmptyIcon.getAttribute('icon'), text: playerEmptyText.textContent};
+
+function showPlayerMessage(text, icon){
+  playerEmptyIcon.setAttribute('icon', icon);
+  playerEmptyText.textContent = text;
+  playerEmpty.style.display = 'flex';
+}
+
+/* The stream didn't start or died: fall back to the broadcaster's page, or -
+   for a stream-only channel - say it's unavailable right now. */
+function onStreamFailed(ch){
   ch.streamOk = false;
-  ch.status = ch.linkStatus || 'timeout';
+  ch.status = ch.url ? (ch.linkStatus || 'timeout') : 'blocked';
   stopPlayback();
-  loadingOverlay.classList.remove('hide');
-  startLink(ch);
+  if(ch.url){
+    loadingOverlay.classList.remove('hide');
+    startLink(ch);
+    showToast('השידור הישיר לא זמין כרגע - עברנו לאתר המשדר');
+  } else {
+    loadingOverlay.classList.add('hide');
+    showPlayerMessage('השידור של הערוץ הזה לא זמין כרגע', 'mdi:television-off');
+  }
   updateSourceToggle();
   updateVolumeUI();
   renderList();
-  showToast('השידור הישיר לא זמין כרגע - עברנו לאתר המשדר');
 }
 
 playerVideo.addEventListener('playing', () => {
@@ -573,7 +615,7 @@ playerVideo.addEventListener('playing', () => {
 
 // native (Safari) playback errors - hls.js reports its own through Hls.Events.ERROR
 playerVideo.addEventListener('error', () => {
-  if(currentSource === 'stream' && !hls) fallbackToLink(findChannel(currentId));
+  if(currentSource === 'stream' && !hls) onStreamFailed(findChannel(currentId));
 });
 
 /* source: 'stream' | 'link' | undefined (= stream if it isn't known to be down) */
@@ -582,6 +624,7 @@ function selectChannel(id, source){
   if(!ch) return;
   currentId = id;
   if(!ch.stream) source = 'link';
+  else if(!ch.url) source = 'stream';   // stream-only: always worth a (re)try
   else if(!source) source = ch.streamOk === false ? 'link' : 'stream';
 
   stopPlayback();
@@ -596,7 +639,17 @@ function selectChannel(id, source){
   npAvatar.textContent = avatarLabel(ch);
   npTitle.textContent = ch.name;
   npSub.textContent = ch.group + (mode === 'radio' ? ' · רדיו לייב' : ' · שידור חי');
-  npOpenNew.href = ch.url;
+  if(ch.url){
+    npOpenNew.href = ch.url;
+    npOpenNew.classList.remove('disabled');
+    npOpenNew.removeAttribute('aria-disabled');
+    npOpenNew.removeAttribute('title');
+  } else {
+    npOpenNew.removeAttribute('href');   // an <a> without href doesn't navigate
+    npOpenNew.classList.add('disabled');
+    npOpenNew.setAttribute('aria-disabled', 'true');
+    npOpenNew.title = 'אין אתר משדר לערוץ הזה';
+  }
   updateNowPlayingFavIcon();
   updateSourceToggle();
   updateVolumeUI();
@@ -605,21 +658,31 @@ function selectChannel(id, source){
 }
 
 const streamOpt = sourceToggle.querySelector('[data-source="stream"]');
+const linkOpt = sourceToggle.querySelector('[data-source="link"]');
 const STREAM_OPT_TITLE = streamOpt.title;
+const LINK_OPT_TITLE = linkOpt.title;
 
-/* The toggle is shown for every channel so they all look the same; channels
-   without a stream get a visibly disabled direct-player option instead. */
+function setOptionAvailable(opt, available, title){
+  opt.classList.toggle('disabled', !available);
+  opt.setAttribute('aria-disabled', String(!available));
+  opt.title = title;
+}
+
+/* The toggle is shown for every channel so they all look the same; an option
+   the channel doesn't have (no stream / no page) is visibly disabled instead. */
 function updateSourceToggle(){
   const ch = currentId ? findChannel(currentId) : null;
   const hasStream = !!(ch && ch.stream);
+  const hasLink = !!(ch && ch.url);
   sourceToggle.querySelectorAll('.source-opt').forEach(opt => {
     opt.classList.toggle('active', opt.dataset.source === currentSource);
   });
-  streamOpt.classList.toggle('disabled', !hasStream);
-  streamOpt.setAttribute('aria-disabled', String(!hasStream));
-  streamOpt.title = !hasStream ? 'אין שידור ישיר לערוץ הזה - הוא זמין רק דרך אתר המשדר'
+  setOptionAvailable(streamOpt, hasStream,
+    !hasStream ? 'אין שידור ישיר לערוץ הזה - הוא זמין רק דרך אתר המשדר'
     : ch.streamOk === false ? 'השידור הישיר לא זמין כרגע - לחיצה תנסה שוב'
-    : STREAM_OPT_TITLE;
+    : STREAM_OPT_TITLE);
+  setOptionAvailable(linkOpt, hasLink,
+    hasLink ? LINK_OPT_TITLE : 'אין אתר משדר לערוץ הזה - הוא זמין רק בנגן הישיר');
 }
 
 sourceToggle.addEventListener('click', (e) => {
@@ -724,7 +787,7 @@ volumeIcon.addEventListener('click', () => {
 
 /* ---------- ZAP ---------- */
 function zap(step){
-  const list = currentList().filter(c => c.isLive);
+  const list = currentList();
   if(list.length === 0) return;
   let startIdx = list.findIndex(c => c.id === currentId);
   if(startIdx === -1) startIdx = 0;
@@ -755,7 +818,7 @@ function setMode(newMode){
   tabRadio.classList.toggle('radio-active', mode === 'radio');
   currentId = null;
   stopPlayback();
-  playerEmpty.style.display = 'flex';
+  showPlayerMessage(PLAYER_EMPTY_DEFAULT.text, PLAYER_EMPTY_DEFAULT.icon);
   nowPlaying.style.display = 'none';
   loadingOverlay.classList.add('hide');
   updateVolumeUI();
@@ -783,11 +846,29 @@ document.addEventListener('click', (e) => {
   }
 });
 
-/* ---------- CHANNEL FILTER (live/not-live + status) ---------- */
+/* ---------- CHANNEL FILTER (status + source) ---------- */
+/* Opens under the button, right-aligned with it, but kept inside the window -
+   on narrow screens the button sits near the left edge. Call once the panel
+   is open so it has a size to measure. */
 function positionFilterPanel(){
   const rect = filterBtn.getBoundingClientRect();
-  filterPanel.style.top = (rect.bottom + 8) + 'px';
-  filterPanel.style.right = (window.innerWidth - rect.right) + 'px';
+  const margin = 8;
+  const width = filterPanel.offsetWidth;
+  const height = filterPanel.offsetHeight;
+  // fixed positioning is measured without the scrollbar, unlike window.innerWidth
+  const viewW = document.documentElement.clientWidth;
+  const viewH = document.documentElement.clientHeight;
+
+  let right = viewW - rect.right;
+  right = Math.max(margin, Math.min(right, viewW - width - margin));
+
+  let top = rect.bottom + 8;
+  if(top + height > viewH - margin){
+    top = Math.max(margin, rect.top - 8 - height);   // not enough room below - open above
+  }
+
+  filterPanel.style.top = top + 'px';
+  filterPanel.style.right = right + 'px';
   filterPanel.style.left = 'auto';
 }
 
@@ -797,8 +878,8 @@ filterBtn.addEventListener('click', (e) => {
   if(filterPanel.classList.contains('open')){
     filterPanel.classList.remove('open');
   } else {
-    positionFilterPanel();
     filterPanel.classList.add('open');
+    positionFilterPanel();
   }
 });
 document.addEventListener('click', (e) => {
@@ -808,15 +889,6 @@ document.addEventListener('click', (e) => {
 });
 
 function syncFiltersFromCheckboxes(){
-  const newLive = new Set();
-  if(chkLive.checked) newLive.add('live');
-  if(chkNotLive.checked) newLive.add('notlive');
-  if(newLive.size === 0){
-    chkLive.checked = true;
-    newLive.add('live');
-  }
-  filterLive = newLive;
-
   const newStatuses = new Set();
   if(chkOk.checked) newStatuses.add('ok');
   if(chkTimeout.checked) newStatuses.add('timeout');
@@ -827,19 +899,28 @@ function syncFiltersFromCheckboxes(){
   }
   filterStatuses = newStatuses;
 
+  const newSources = new Set();
+  if(chkStream.checked) newSources.add('stream');
+  if(chkSite.checked) newSources.add('site');
+  if(newSources.size === 0){
+    chkStream.checked = true;
+    newSources.add('stream');
+  }
+  filterSources = newSources;
+
   renderList();
 }
 
-[chkLive, chkNotLive, chkOk, chkTimeout, chkBlocked].forEach(chk => {
+[chkOk, chkTimeout, chkBlocked, chkStream, chkSite].forEach(chk => {
   chk.addEventListener('change', syncFiltersFromCheckboxes);
 });
 
 filterResetBtn.addEventListener('click', () => {
-  chkLive.checked = true;
-  chkNotLive.checked = false;
   chkOk.checked = true;
   chkTimeout.checked = false;
   chkBlocked.checked = false;
+  chkStream.checked = true;
+  chkSite.checked = true;
   syncFiltersFromCheckboxes();
 });
 
@@ -900,15 +981,11 @@ function renderAllChannelsView(){
 
     groups[groupName].forEach(c => {
       const card = document.createElement('div');
-      card.className = 'ac-card' + (c.isLive ? '' : ' not-live');
+      card.className = 'ac-card';
 
       const dot = document.createElement('span');
       dot.className = 'ac-dot' + (c.status !== 'idle' ? ' ' + c.status : '');
       dot.title = statusLabel(c.status, c);
-
-      const liveBadge = document.createElement('span');
-      liveBadge.className = 'ac-live-badge ' + (c.isLive ? 'live' : 'not-live');
-      liveBadge.textContent = 'LIVE';
 
       const avatar = document.createElement('div');
       avatar.className = 'ac-avatar';
@@ -921,7 +998,6 @@ function renderAllChannelsView(){
       nameEl.textContent = c.name;
 
       card.appendChild(dot);
-      card.appendChild(liveBadge);
       card.appendChild(avatar);
       card.appendChild(nameEl);
 
