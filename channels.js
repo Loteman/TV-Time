@@ -32,16 +32,16 @@ const TV_CHANNELS = [
   {id:'knesset99', name:'כנסת 99', group:'חדשות ואקטואליה', color:'#6f9c4f', remoteNumber:99,
    url:'https://www.knesset.tv/live/',
    stream:'https://contact.gostreaming.tv/Knesset/myStream/playlist.m3u8'},  // only live during sessions
-  {id:'chinuchit', name:'כאן החינוכית', group:'ילדים', color:'#2f6fed',
+  {id:'chinuchit', name:'כאן החינוכית', group:'ילדים', color:'#2f6fed', remoteNumber:80,
    url:'https://www.kan.org.il/live/?stationId=4471#'},
-  {id:'ch24', name:'ערוץ 24', group:'תרבות, בידור ומוזיקה', color:'#1c8c5b',
+  {id:'ch24', name:'ערוץ 24', group:'תרבות, בידור ומוזיקה', color:'#1c8c5b', remoteNumber:24,
    url:'https://www.mako.co.il/mako-vod-live-tv/VOD-b3480d2eff3fd31006.htm?sCh=3377c13070733210&pId=935020712'},
-  {id:'hidabroot', name:'הידברות', group:'דת ומסורת', color:'#4f9ddc',
+  {id:'hidabroot', name:'הידברות', group:'דת ומסורת', color:'#4f9ddc', remoteNumber:97,
    stream:'https://cdn.cybercdn.live/HidabrootIL/Live97/playlist.m3u8'},
-  {id:'shelanu', name:'שלנו TV', group:'דת ומסורת', color:'#b08a2e',
-   stream:'https://1247634592.rsc.cdn77.org/1247634592/playlist.m3u8'},
   {id:'kabbalah', name:'קבלה לעם', group:'דת ומסורת', color:'#7a4fdc',
    stream:'https://edge3.uk.kab.tv/live/tv66-heb-high/playlist.m3u8'},  // not 24/7
+  {id:'shelanu', name:'שלנו TV', group:'דת ומסורת', color:'#b08a2e', remoteNumber:182,  // HOT only
+   stream:'https://1247634592.rsc.cdn77.org/1247634592/playlist.m3u8'},
   {id:'ch9', name:'ערוץ 9', group:'בשפות אחרות', color:'#3f8fd8', remoteNumber:9,
    stream:'https://contact.gostreaming.tv/Con-11/index.m3u8'},
   {id:'i24en', name:'i24News English', group:'בשפות אחרות', color:'#c94f4f', label:'EN',
