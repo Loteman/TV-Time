@@ -117,5 +117,12 @@
   <p class="note">המידע בעמוד זה מסביר את העקרונות שלפיהם האתר בנוי, ואינו מהווה ייעוץ משפטי.</p>
 </main>
 
+<script>
+  // came from the classic view (?old-ui): the way back keeps it
+  if(new URLSearchParams(location.search).has('old-ui')){
+    document.querySelectorAll('a[href="./"]').forEach(a => { a.href = './?old-ui'; });
+  }
+</script>
+
 </body>
 </html>

@@ -16,6 +16,14 @@
 <link rel="stylesheet" href="tv.css">
 </head>
 <body>
+<!-- The interface, decided before anything is drawn (so the classic layout
+     doesn't flash first): the full-screen one (tv.js) everywhere, unless
+     the address asks for the classic one with ?old-ui. script.js reads it. -->
+<script>
+  if(/TVTimeApp/.test(navigator.userAgent) || !new URLSearchParams(location.search).has('old-ui')){
+    document.body.classList.add('tv-mode');
+  }
+</script>
 
 <header>
   <a class="brand" id="brandHome" href="./" title="לדף הבית">

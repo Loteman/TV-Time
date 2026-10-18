@@ -1,10 +1,15 @@
 /* ---------- STATE ---------- */
-/* TV (remote control) mode: on in the Android TV app, which adds "TVTimeApp"
-   to its user agent, or with ?tv in the address for testing in a browser.
-   The TV interface itself lives in tv.js / tv.css; desktop and mobile
-   behavior is unchanged when it's off. */
-const TV_MODE = /TVTimeApp/.test(navigator.userAgent) || new URLSearchParams(location.search).has('tv');
-if(TV_MODE) document.body.classList.add('tv-mode');
+/* TV mode - the site's interface, full screen, in tv.js / tv.css: on every
+   device (remote, mouse, keyboard, touch), unless the address has ?old-ui,
+   which keeps the classic desktop / mobile view (the Android TV app, which
+   adds "TVTimeApp" to its user agent, always gets TV mode). index.html's
+   first script decides it before anything is drawn, by marking the body. */
+const TV_APP = /TVTimeApp/.test(navigator.userAgent);
+const TV_MODE = document.body.classList.contains('tv-mode');
+/* The TV itself (the app, or ?tv imitating it in a browser): a remote can't
+   operate a broadcaster's page, so there only direct streams are offered and
+   tested. Computers and phones show broadcaster pages too. */
+const TV_DEVICE = TV_MODE && (TV_APP || new URLSearchParams(location.search).has('tv'));
 
 let mode = 'tv';               // 'tv' | 'radio'
 let currentId = null;
@@ -396,11 +401,11 @@ async function testOneChannel(ch, timeoutMs){
     renderList();
   }
 
-  // the TV never offers a broadcaster page (only as a stream's fallback), so
-  // it doesn't load one to test it - the page counts as unverified there
+  // the TV itself never offers a broadcaster page, so it doesn't load one
+  // to test it - the page counts as unverified there
   const [streamResult, linkStatus] = await Promise.all([
     ch.stream ? testStream(ch, timeoutMs) : null,
-    TV_MODE ? (ch.url ? 'timeout' : null) : testLink(ch, timeoutMs),
+    TV_DEVICE ? (ch.url ? 'timeout' : null) : testLink(ch, timeoutMs),
   ]);
   const streamOk = streamResult === null ? null : streamResult === true;
   ch.streamOk = streamOk;
@@ -413,7 +418,7 @@ async function testOneChannel(ch, timeoutMs){
   saveStatuses();
 
   if(streamResult === 'timeout') recheckStream(ch, RECHECK_TRIES);
-  if(linkStatus === 'timeout' && !isUnverifiable(ch) && !TV_MODE) recheckLink(ch, RECHECK_TRIES);
+  if(linkStatus === 'timeout' && !isUnverifiable(ch) && !TV_DEVICE) recheckLink(ch, RECHECK_TRIES);
 }
 
 /* A check that was only slow (e.g. while the page itself was loading, or on
@@ -501,11 +506,11 @@ async function testChannels(list){
 /* Every channel, TV and radio, is tested in parallel once when the site
    loads; switching tabs only shows results that are already there. Each
    channel is tested once per run, and one that an earlier run is still
-   testing isn't queued again (its fresh result is on the way). The TV shows
-   only channels with a direct stream, so it tests only those. */
+   testing isn't queued again (its fresh result is on the way). The TV itself
+   shows only channels with a direct stream, so it tests only those. */
 function runAllTests(){
   testChannels([...TV_CHANNELS, ...RADIO_CHANNELS]
-    .filter(c => (!TV_MODE || c.stream) && !testsInFlight.has(c.id)));
+    .filter(c => (!TV_DEVICE || c.stream) && !testsInFlight.has(c.id)));
 }
 
 document.getElementById('retestBtn').addEventListener('click', () => {
@@ -606,7 +611,8 @@ function startLink(ch){
   const iframe = document.createElement('iframe');
   iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
   iframe.setAttribute('allowfullscreen', 'true');
-  // on TV, focus inside a cross-origin page would trap the remote's arrows
+  // in the TV interface, focus inside a cross-origin page would trap the
+  // arrow keys (a click into it still focuses it)
   if(TV_MODE) iframe.tabIndex = -1;
   iframe.src = ch.url;
   playerShell.insertBefore(iframe, playerShell.firstChild);
@@ -619,8 +625,10 @@ function playVideo(seq){
     if(seq !== loadSeq || err.name !== 'NotAllowedError' || playerVideo.muted) return;
     // the browser blocked autoplay with sound - start muted rather than not at all
     playerVideo.muted = true;
+    autoMuted = true;
     playerVideo.play().catch(() => {});
-    showToast('הדפדפן חסם ניגון עם קול - לחצו על הרמקול כדי להפעיל את הקול');
+    showToast(TV_MODE ? 'הדפדפן חסם ניגון עם קול - לחיצה או מקש יפעילו אותו'
+                      : 'הדפדפן חסם ניגון עם קול - לחצו על הרמקול כדי להפעיל את הקול');
   });
 }
 
@@ -674,16 +682,17 @@ function showPlayerMessage(text, icon){
 }
 
 /* The stream didn't start or died: fall back to the broadcaster's page, or -
-   for a stream-only channel, and always on TV, which never shows broadcaster
-   pages - say it's unavailable right now. On TV a failed start first gets
-   one automatic retry: a TV box that just woke up may still be connecting. */
+   for a stream-only channel, and always on the TV itself, which never shows
+   broadcaster pages - say it's unavailable right now. In the TV interface a
+   failed start first gets one automatic retry: a TV box that just woke up
+   may still be connecting. */
 const STREAM_RETRY_DELAY_MS = 2000;
 
 function onStreamFailed(ch){
   ch.streamOk = false;
   ch.status = ch.url ? (ch.linkStatus || 'timeout') : 'blocked';
   stopPlayback();
-  if(ch.url && !TV_MODE){
+  if(ch.url && !TV_DEVICE){
     loadingOverlay.classList.remove('hide');
     startLink(ch);
     showToast('השידור הישיר לא זמין כרגע - עברנו לאתר המשדר');
@@ -733,8 +742,8 @@ function selectChannel(id, source){
   if(!ch) return;
   currentId = id;
   if(!ch.stream) source = 'link';
-  // stream-only, or on TV (no broadcaster pages there): always worth a (re)try
-  else if(!ch.url || TV_MODE) source = 'stream';
+  // stream-only, or on the TV itself (no broadcaster pages there): always worth a (re)try
+  else if(!ch.url || TV_DEVICE) source = 'stream';
   else if(!source) source = ch.streamOk === false ? 'link' : 'stream';
 
   stopPlayback();
@@ -809,11 +818,15 @@ npFav.addEventListener('click', () => { if(currentId) toggleFav(currentId); });
 /* ---------- BRIGHTNESS SLIDER ---------- */
 const brightnessSlider = document.getElementById('brightnessSlider');
 const brightnessValueLabel = document.getElementById('brightnessValueLabel');
-brightnessSlider.addEventListener('input', (e) => {
-  brightnessValue = Number(e.target.value);
-  brightnessValueLabel.textContent = brightnessValue + '%';
+
+// (also used by the TV interface's settings - tv.js)
+function setBrightness(value){
+  brightnessValue = value;
+  brightnessSlider.value = value;
+  brightnessValueLabel.textContent = value + '%';
   applyBrightness();
-});
+}
+brightnessSlider.addEventListener('input', (e) => setBrightness(Number(e.target.value)));
 
 /* ---------- VOLUME / MUTE ----------
    Direct player: a real volume slider and a real mute, kept while zapping
@@ -831,6 +844,7 @@ let volumeValue = 80;       // 0-100
 let isMuted = false;        // real mute of our own <video>
 let linkStopped = false;    // iframe "mute" = page unloaded
 let stoppedSrc = null;
+let autoMuted = false;      // muted by the browser's autoplay rule, not by the viewer
 
 function updateVolumeUI(){
   const linkMode = currentSource === 'link';
@@ -856,13 +870,32 @@ function updateVolumeUI(){
   volumeIcon.classList.toggle('muted', silent);
 }
 
-volumeSlider.addEventListener('input', () => {
-  volumeValue = Number(volumeSlider.value);
-  if(volumeValue > 0) isMuted = false;   // dragging the slider up unmutes, like most players
+/* The direct player's volume and mute - also used by the TV interface's
+   own controls and keys (tv.js). */
+function setVolume(value){
+  volumeValue = Math.max(0, Math.min(100, Math.round(value)));
+  if(volumeValue > 0) isMuted = false;   // turning it up unmutes, like most players
+  applyStreamVolume();
+}
+
+function toggleStreamMute(){
+  if(isMuted || volumeValue === 0){
+    isMuted = false;
+    if(volumeValue === 0) volumeValue = 50;   // unmuting at zero volume would stay silent
+  } else {
+    isMuted = true;
+  }
+  applyStreamVolume();
+}
+
+function applyStreamVolume(){
+  autoMuted = false;   // the viewer's own choice from now on
   playerVideo.volume = volumeValue / 100;
   playerVideo.muted = isMuted;
   updateVolumeUI();
-});
+}
+
+volumeSlider.addEventListener('input', () => setVolume(Number(volumeSlider.value)));
 
 // keeps our slider in sync with the native video controls too
 playerVideo.addEventListener('volumechange', () => {
@@ -883,37 +916,31 @@ volumeIcon.addEventListener('click', () => {
       iframe.src = stoppedSrc || findChannel(currentId).url;
       linkStopped = false;
     }
+    updateVolumeUI();
   } else {
-    if(isMuted || volumeValue === 0){
-      isMuted = false;
-      if(volumeValue === 0) volumeValue = 50;   // unmuting at zero volume would stay silent
-    } else {
-      isMuted = true;
-    }
-    playerVideo.volume = volumeValue / 100;
-    playerVideo.muted = isMuted;
+    toggleStreamMute();
   }
-  updateVolumeUI();
 });
 
 /* ---------- ZAP ---------- */
 /* Zapping goes through the channels the list shows right now - the same
-   status / source / favorites / search filters - wrapping around. It starts
-   from the current channel's place in the full list, so it also works when
-   the playing channel itself is filtered out. Returns whether it switched. */
-function zap(step){
+   status / source / favorites / search filters - wrapping around (and the
+   TV interface can keep it to the favorites). It starts from the current
+   channel's place in the full list, so it also works when the playing
+   channel itself is filtered out. Returns whether it switched. */
+function zap(step, favoritesOnly){
   const list = currentList();
   const n = list.length;
   let idx = list.findIndex(c => c.id === currentId);   // -1: nothing playing yet
   for(let i = 0; i < n; i++){
     idx = (idx + step + n) % n;
     const ch = list[idx];
-    if(ch.id !== currentId && matchesFilters(ch)){
+    if(ch.id !== currentId && matchesFilters(ch) && (!favoritesOnly || favorites.has(ch.id))){
       selectChannel(ch.id);
       return true;
     }
   }
-  showToast('אין ערוצים נוספים שמתאימים לסינון הנוכחי');
+  showToast(favoritesOnly ? 'אין ערוצים נוספים במועדפים' : 'אין ערוצים נוספים שמתאימים לסינון הנוכחי');
   return false;
 }
 zapPrev.addEventListener('click', () => zap(1));   // RTL: right = previous in list order
@@ -1180,6 +1207,13 @@ allChannelsBtn.addEventListener('click', () => {
     showAllChannelsView();
   }
 });
+
+/* The classic view lives at ?old-ui - its links to the home page and to
+   About (whose way back is the home page) keep it. */
+if(!TV_MODE){
+  document.getElementById('brandHome').href = './?old-ui';
+  document.getElementById('aboutLink').href = 'about.html?old-ui';
+}
 
 /* ---------- LOGO = HOME ----------
    Goes back to the main view without reloading, so the playing channel and
