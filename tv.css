@@ -64,8 +64,7 @@ body.tv-mode .player-shell{
 }
 body.tv-mode .player-empty{gap:calc(16 * var(--u));}
 body.tv-mode .player-empty iconify-icon{font-size:calc(76 * var(--u));}
-body.tv-mode .player-empty > div:not(.tv-hints){font-size:calc(24 * var(--u));color:#d6dbe3;}
-body.tv-mode .player-empty .tv-hints{margin-top:calc(4 * var(--u));font-size:calc(15 * var(--u));}
+body.tv-mode .player-empty > div{font-size:calc(24 * var(--u));color:#d6dbe3;}
 body.tv-mode .radio-art{gap:calc(22 * var(--u));}
 body.tv-mode .radio-art-avatar{width:calc(150 * var(--u));height:calc(150 * var(--u));border-radius:calc(34 * var(--u));font-size:calc(54 * var(--u));}
 body.tv-mode .radio-art-avatar.avatar-long{font-size:calc(36 * var(--u));}
@@ -102,12 +101,7 @@ body.tv-browse-open .player-toast{bottom:auto;top:calc(118 * var(--u));}
   fill:currentColor;
 }
 
-/* hints - for the remote / keyboard, or for touch (body.tv-touch); none
-   with a mouse (body.tv-pointer) */
-.tv-hints.touch,
-body.tv-touch .tv-hints.remote,
-body.tv-pointer .tv-hints{display:none;}
-body.tv-touch .tv-hints.touch{display:flex;}
+/* key hints (in the settings' how-to) */
 .tv-hints{
   display:flex;
   flex-wrap:wrap;
@@ -198,10 +192,6 @@ body.tv-portrait .tv-info{opacity:1;visibility:visible;transform:none;transition
 }
 .tv-info-status.timeout{color:#f3c94a;background:rgba(224,179,11,.16);}
 .tv-info-status.blocked{color:#f07a82;background:rgba(224,85,95,.16);}
-.tv-info-hint{margin-top:calc(9 * var(--u));}
-body.tv-browse-open .tv-info-hint,
-body.tv-portrait .tv-info-hint,
-body.tv-site .tv-info-hint{display:none !important;}
 .tv-info-side{
   margin-inline-start:auto;
   display:flex;
@@ -269,6 +259,9 @@ body:not(.tv-touch) .tv-btn.tv-focus{background:var(--yellow);color:#1a1500;tran
 /* the player's and the app's controls (volume, picture in picture, full
    screen, settings) at the row's far end */
 .tv-menu-media{display:flex;align-items:center;gap:calc(10 * var(--u));margin-inline-start:auto;}
+/* no room for the labels (always in portrait): every button just its icon */
+.tv-menu.tv-menu-tight .tv-btn{flex-shrink:0;width:calc(40 * var(--u));padding:0;justify-content:center;}
+.tv-menu.tv-menu-tight .tv-btn span{display:none;}
 
 .tv-rows{height:calc(204 * var(--u));overflow:hidden;}
 .tv-rows-strip{position:relative;transition:transform .25s ease;}
@@ -394,7 +387,6 @@ body:not(.tv-touch) .tv-card.tv-focus{
 }
 .tv-status-line{display:flex;align-items:center;gap:calc(8 * var(--u));font-size:calc(13 * var(--u));color:var(--muted);}
 .tv-status-line .tv-icon{color:var(--yellow);font-size:calc(16 * var(--u));animation:spin .9s linear infinite;}
-.tv-browse-foot .tv-hints{margin-inline-start:auto;}
 
 /* SETTINGS SHEET */
 .tv-sheet{
@@ -410,7 +402,7 @@ body:not(.tv-touch) .tv-card.tv-focus{
 body.tv-sheet-open .tv-sheet{opacity:1;pointer-events:auto;}
 body:not(.tv-sheet-open) .tv-sheet{visibility:hidden;}
 .tv-sheet-panel{
-  width:calc(600 * var(--u));
+  width:calc(880 * var(--u));
   max-width:calc(100% - 2 * var(--tv-safe-x));
   background:#161b23;
   border:calc(1 * var(--u)) solid var(--border);
@@ -467,8 +459,31 @@ body:not(.tv-touch) .tv-switch.tv-focus{border-color:var(--yellow);transform:sca
 }
 .tv-switch.on .tv-switch-knob{background:#3fce6f;}
 .tv-switch.on .tv-switch-knob::after{transform:translateX(calc(-22 * var(--u)));background:#fff;}
+/* the settings in one column, how to use it in the other */
+.tv-sheet-main{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
+  gap:calc(10 * var(--u)) calc(22 * var(--u));
+  align-items:start;
+}
+.tv-howto{
+  margin-top:calc(10 * var(--u));
+  padding:calc(14 * var(--u)) calc(16 * var(--u)) calc(16 * var(--u));
+  border-radius:calc(14 * var(--u));
+  background:#1f252f;
+}
+.tv-howto-title{font-size:calc(17 * var(--u));font-weight:700;}
+.tv-howto-group{margin-top:calc(12 * var(--u));}
+.tv-howto-group-title{
+  margin-bottom:calc(7 * var(--u));
+  font-size:calc(12.5 * var(--u));
+  font-weight:700;
+  color:var(--muted);
+}
+.tv-howto .tv-hints{gap:calc(8 * var(--u)) calc(18 * var(--u));font-size:calc(13.5 * var(--u));color:#c3cad4;}
 .tv-sheet-actions{display:flex;gap:calc(10 * var(--u));margin-top:calc(22 * var(--u));}
-.tv-sheet-actions .tv-btn{flex:1;justify-content:center;height:calc(44 * var(--u));}
+.tv-sheet-actions .tv-btn{flex:1;min-width:0;justify-content:center;height:calc(44 * var(--u));}
+.tv-label-short{display:none;}
 /* brightness (not on the TV) */
 .tv-slider-row{
   margin-top:calc(10 * var(--u));
@@ -577,8 +592,7 @@ body.tv-portrait{
 body.tv-portrait .player-shell{bottom:auto;height:var(--tv-player-h);}
 body.tv-portrait .player-empty{gap:calc(8 * var(--u));}
 body.tv-portrait .player-empty iconify-icon{font-size:calc(40 * var(--u));}
-body.tv-portrait .player-empty > div:not(.tv-hints){font-size:calc(15 * var(--u));}
-body.tv-portrait .player-empty .tv-hints{margin-top:0;font-size:calc(11.5 * var(--u));}
+body.tv-portrait .player-empty > div{font-size:calc(15 * var(--u));}
 body.tv-portrait .radio-art{gap:calc(9 * var(--u));}
 body.tv-portrait .radio-art-avatar{width:calc(70 * var(--u));height:calc(70 * var(--u));border-radius:calc(17 * var(--u));font-size:calc(26 * var(--u));}
 body.tv-portrait .radio-art-avatar.avatar-long{font-size:calc(17 * var(--u));}
@@ -644,8 +658,7 @@ body.tv-portrait .tv-menu{
 }
 body.tv-portrait .tv-btn{height:calc(36 * var(--u));padding:0 calc(10 * var(--u));gap:calc(5 * var(--u));font-size:calc(13.5 * var(--u));}
 body.tv-portrait .tv-btn .tv-icon{font-size:calc(17 * var(--u));}
-body.tv-portrait .tv-menu-icon{flex-shrink:0;width:calc(33 * var(--u));padding:0;justify-content:center;}
-body.tv-portrait .tv-menu-icon span{display:none;}
+body.tv-portrait .tv-menu.tv-menu-tight .tv-btn{width:calc(36 * var(--u));}
 body.tv-portrait .tv-menu-media{gap:calc(5 * var(--u));}
 
 body.tv-portrait .tv-rows{flex:1;height:auto;min-height:0;}
@@ -668,9 +681,13 @@ body.tv-portrait .tv-browse-foot{
   gap:calc(4 * var(--u)) calc(14 * var(--u));
   padding:calc(8 * var(--u)) var(--tv-safe-x) 0;
 }
-body.tv-portrait .tv-browse-foot .tv-hints{font-size:calc(11.5 * var(--u));}
 body.tv-portrait .tv-sheet-panel{padding:calc(18 * var(--u)) calc(18 * var(--u)) calc(20 * var(--u));}
-body.tv-portrait .tv-sheet-actions{flex-direction:column;}
+body.tv-portrait .tv-sheet-main{grid-template-columns:minmax(0, 1fr);}
+/* the buttons stay side by side - smaller, with a shorter label */
+body.tv-portrait .tv-sheet-actions{gap:calc(8 * var(--u));}
+body.tv-portrait .tv-sheet-actions .tv-btn{padding:0 calc(8 * var(--u));gap:calc(5 * var(--u));font-size:calc(13.5 * var(--u));}
+body.tv-portrait .tv-label-full{display:none;}
+body.tv-portrait .tv-label-short{display:inline;}
 
 /* CHANNEL ACTIONS (in the banner, by mouse or touch; not on the TV itself)
    - see tv.js: the other source, the page in a new tab, and the channels

@@ -9,16 +9,17 @@
      then each category); OK plays, holding OK toggles a favorite, Back
      closes. It also closes by itself after a while without a key press.
    - Settings: a sheet with a few display switches and (not on the TV) the
-     brightness, kept between launches, a legend of the status dots, a
+     brightness, kept between launches, a legend of the status dots, how to
+     use it all (for what's in use - the screen itself has no key hints), a
      status re-check and About.
    - Mouse (a computer): moving it shows the browser, which
      hides again a few seconds after it stops (unless the pointer is on it);
      hovering focuses, clicking plays, the star on a card toggles a favorite,
      the wheel moves between rows (sideways: along a row, as do the arrows at
      a row's ends), and double-click or F toggles full screen. The banner
-     has channel up / down arrows and the volume. Key hints hide while the
-     mouse is in use. The keyboard works as the remote does, plus M (mute),
-     + / - (volume) and typing a name (search).
+     has channel up / down arrows. The keyboard works as the remote does,
+     plus F (full screen), M (mute), + / - (volume), P (picture in picture)
+     and typing a name (search).
    - Search (not on the TV itself): a menu button, or typing - the menu row
      becomes a search field and the rows show the matching channels.
    - Touch (a phone or tablet): a tap on the picture shows / hides
@@ -132,10 +133,9 @@
     elm.focus({preventScroll: true});
   }
 
-  /* a line of hints: [['▲▼', 'החלפת ערוץ'], ...]. `kind` 'remote' (the remote
-     or keyboard) or 'touch' - tv.css shows the one for what's in use. */
-  function hints(list, kind, cls){
-    const wrap = el('div', 'tv-hints ' + kind + (cls ? ' ' + cls : ''));
+  // a line of hints: [['▲▼', 'החלפת ערוץ'], ...]
+  function hints(list){
+    const wrap = el('div', 'tv-hints');
     list.forEach(([key, label]) => {
       const item = el('span');
       item.append(el('span', 'tv-key', key), document.createTextNode(label));
@@ -159,9 +159,7 @@
   infoStatus.append(infoStatusText);
   infoSub.append(infoSubText, infoStatus);
   const infoText = el('div', 'tv-info-text');
-  infoText.append(infoName, infoSub,
-    hints([['▲▼', 'החלפת ערוץ'], ['OK', 'רשימת הערוצים']], 'remote', 'tv-info-hint'),
-    hints([['החלקה ▲▼', 'החלפת ערוץ'], ['הקשה', 'רשימת הערוצים']], 'touch', 'tv-info-hint'));
+  infoText.append(infoName, infoSub);
   const clock = el('div', 'tv-clock');
   const liveLabel = el('span');
   const liveBadge = el('div', 'tv-live');
@@ -177,7 +175,7 @@
   const infoActions = el('div', 'tv-info-actions');
   // the player's own controls - in the menu row's media group (see MENU)
   const volumeBox = el('div', 'tv-volume');
-  const muteBtn = el('div', 'tv-btn tv-mute tv-menu-icon');
+  const muteBtn = el('div', 'tv-btn tv-mute');
   muteBtn.tabIndex = -1;
   const volumeRange = el('input', 'tv-volume-range');
   volumeRange.type = 'range';
@@ -188,7 +186,7 @@
   volumeBox.append(muteBtn, volumeRange);
   // picture in picture: the direct player's video in a small window that
   // stays on top (where the browser supports it - Safari its own way)
-  const pipBtn = el('div', 'tv-btn tv-pip tv-menu-icon');
+  const pipBtn = el('div', 'tv-btn tv-pip');
   pipBtn.tabIndex = -1;
   const PIP = !TV_DEVICE && (!!document.pictureInPictureEnabled || !!playerVideo.webkitSupportsPresentationMode);
   const sourceBtn = el('div', 'tv-btn tv-act');
@@ -235,9 +233,7 @@
   const statusLine = el('div', 'tv-status-line');
   statusLine.append(icon('mdi:loading'), statusText);
   const foot = el('div', 'tv-browse-foot');
-  foot.append(statusLine,
-    hints([['OK', 'צפייה'], ['החזקת OK', 'הוספה / הסרה ממועדפים'], ['חזור', 'סגירה']], 'remote'),
-    hints([['הקשה', 'צפייה'], ['לחיצה ארוכה', 'הוספה / הסרה ממועדפים']], 'touch'));
+  foot.append(statusLine);
   browse.append(menuEl, rowsView, foot);
 
   // settings sheet
@@ -252,8 +248,6 @@
   body.append(ui);
 
   playerVideo.controls = false;   // nothing to seek in live TV; the remote drives the player
-  playerEmpty.append(hints([['▲▼', 'ערוץ אחר'], ['OK', 'רשימת הערוצים']], 'remote'),
-    hints([['החלקה ▲▼', 'ערוץ אחר'], ['הקשה', 'רשימת הערוצים']], 'touch'));
 
   /* ---------- INFO BANNER ---------- */
   function timeNow(){
@@ -280,7 +274,8 @@
     infoAvatar.style.background = ch.color + '33';
     infoAvatar.style.color = ch.color;
     infoName.textContent = ch.name;
-    const source = currentSource === 'stream' ? 'נגן ישיר' : currentSource === 'link' ? 'אתר המשדר' : '';
+    // (the TV itself only has direct streams - no need to say so there)
+    const source = TV_DEVICE ? '' : currentSource === 'stream' ? 'נגן ישיר' : currentSource === 'link' ? 'אתר המשדר' : '';
     infoSubText.textContent = [ch.group, source].filter(Boolean).join(' · ');
     const unsure = ch.status === 'timeout' || ch.status === 'blocked';
     infoStatus.hidden = !unsure;
@@ -296,7 +291,7 @@
 
   /* The banner (and the bar over a broadcaster's page) has the logo in its
      middle, over the row: where the sides reach it (a narrow screen, a long
-     name, the key hints), the buttons lose their labels, and if that isn't
+     name), the buttons lose their labels, and if that isn't
      enough the logo goes. (Not in portrait, where the banner is under the
      picture and has no logo.) */
   function fitBar(){
@@ -421,28 +416,27 @@
   /* The menu row: getting around the channels at its start - shortcuts to
      the rows, search - and, as a group at its far end, the controls of the
      player and the app: volume, picture in picture, full screen, settings.
-     (About is in Settings.) `shownIf`: an item
-     appears only while there's a row to jump to, or where it works. `cls`
-     (tv.css, portrait): tv-menu-icon - only the icon. `btn`: a button built
-     elsewhere (the volume's mute button, with its slider beside it in
-     `node`). */
+     (About is in Settings.) Where the labels don't fit, every button shows
+     just its icon (fitMenu). `shownIf`: an item appears only while there's
+     a row to jump to, or where it works. `btn`: a button built elsewhere
+     (the volume's mute button, with its slider beside it in `node`). */
   const MENU = [
     {id: 'fav', label: 'מועדפים', icon: 'mdi:star',
      run: () => jumpTo(row => row.key === 'fav', noFavoritesText())},
-    {id: 'tv', label: 'טלוויזיה', icon: 'mdi:television-classic', cls: 'tv-menu-icon',
+    {id: 'tv', label: 'טלוויזיה', icon: 'mdi:television-classic',
      run: () => jumpTo(row => row.kind === 'tv'), shownIf: () => rows.some(row => row.kind === 'tv')},
-    {id: 'radio', label: 'רדיו', icon: 'mdi:radio', cls: 'tv-menu-icon',
+    {id: 'radio', label: 'רדיו', icon: 'mdi:radio',
      run: () => jumpTo(row => row.kind === 'radio'), shownIf: () => rows.some(row => row.kind === 'radio')},
     // (typing on the TV's remote is too slow to be worth it)
-    {id: 'search', label: 'חיפוש', icon: 'mdi:magnify', cls: 'tv-menu-icon',
+    {id: 'search', label: 'חיפוש', icon: 'mdi:magnify',
      run: () => openSearch(), shownIf: () => !TV_DEVICE},
     // the far-end group (the TV's remote has its own volume keys)
     {id: 'volume', media: true, btn: muteBtn, node: volumeBox,
      run: () => toggleMute(), shownIf: () => !TV_DEVICE && currentSource === 'stream'},
     {id: 'pip', media: true, btn: pipBtn, run: () => togglePip(), shownIf: () => canPip()},
-    {id: 'full', label: 'מסך מלא', icon: 'mdi:fullscreen', cls: 'tv-menu-icon', media: true,
+    {id: 'full', label: 'מסך מלא', icon: 'mdi:fullscreen', media: true,
      run: () => toggleFullscreen(), shownIf: () => !TV_APP && !!document.fullscreenEnabled},
-    {id: 'settings', label: 'הגדרות', icon: 'mdi:cog-outline', cls: 'tv-menu-icon', media: true,
+    {id: 'settings', label: 'הגדרות', icon: 'mdi:cog-outline', media: true,
      run: () => openSheet()},
   ];
 
@@ -451,7 +445,7 @@
   const menuButtons = MENU.map(m => {
     let btn = m.btn;
     if(!btn){
-      btn = el('div', 'tv-btn' + (m.cls ? ' ' + m.cls : ''));
+      btn = el('div', 'tv-btn');
       btn.tabIndex = -1;
       btn.setAttribute('aria-label', m.label);
       btn.append(icon(m.icon), el('span', null, m.label));
@@ -485,6 +479,18 @@
       const i = menuRow.items.findIndex(it => it.el === focusedEl);
       if(i !== -1) pos.c = menuRow.col = i;
     }
+    fitMenu();
+  }
+
+  /* All the buttons just icons (tv.css's tv-menu-tight) where their labels
+     don't fit in the row - always in portrait - rather than some with a
+     label and some without. Measured with the labels: the group at the
+     row's far end is pushed past its edge when they don't fit. */
+  function fitMenu(){
+    if(searching) return;   // (the buttons are hidden behind the search field)
+    menuEl.classList.remove('tv-menu-tight');
+    const edge = menuEl.getBoundingClientRect().left + (parseFloat(getComputedStyle(menuEl).paddingLeft) || 0);
+    if(portrait || mediaGroup.getBoundingClientRect().left < edge - 1) menuEl.classList.add('tv-menu-tight');
   }
 
   /* Search (not on the TV itself): the menu row turns into a search field,
@@ -928,6 +934,13 @@
   ].filter(s => s.shown !== false);
   const sheetActions = new Map();   // focusable element -> what OK does
 
+  // the settings in one column, how to use it in the other (one below the
+  // other on a narrow screen), the buttons under both
+  const sheetMain = el('div', 'tv-sheet-main');
+  const sheetCol = el('div', 'tv-sheet-col');
+  sheetMain.append(sheetCol);
+  sheetPanel.append(sheetMain);
+
   function addSheetItem(elm, run){
     elm.tabIndex = -1;
     elm.classList.add('tv-nav');
@@ -944,7 +957,7 @@
       applyTvSettings();
       refreshSheet();
     });
-    sheetPanel.append(row);
+    sheetCol.append(row);
     return {row, key: s.key};
   });
 
@@ -967,7 +980,7 @@
     row.append(top, brightRange);
     addSheetItem(row, () => {});
     brightRange.addEventListener('input', () => setTvBrightness(Number(brightRange.value)));
-    sheetPanel.append(row);
+    sheetCol.append(row);
     brightRow = row;
   }
 
@@ -987,11 +1000,43 @@
     legend.append(item);
   });
   legend.append(el('span', 'tv-legend-note', 'ערוץ בלי נקודה עובד'));
-  sheetPanel.append(legend);
+  sheetCol.append(legend);
+
+  /* How to use it - for what's in use when the sheet opens: the remote on
+     the TV itself, touch, or else a computer's keyboard and mouse. */
+  const HOW_TO = [
+    {kind: 'remote', title: 'שלט', list: [
+      ['▲▼', 'החלפת ערוץ'], ['OK', 'רשימת הערוצים, צפייה בערוץ'], ['החזקת OK', 'שינוי מועדפים'],
+      ['חזור', TV_APP ? 'סגירה (פעמיים: יציאה מהאפליקציה)' : 'סגירה']]},
+    {kind: 'keyboard', title: 'מקלדת', list: [
+      ['▲▼', 'החלפת ערוץ'], ['Enter', 'רשימת הערוצים, צפייה בערוץ'], ['החזקת Enter', 'שינוי מועדפים'],
+      ['Esc', 'סגירה'], ['הקלדה', 'חיפוש ערוץ'], ['F', 'מסך מלא'], ['M', 'השתקה'],
+      ['+ / −', 'עוצמת הקול'], ['P', 'תמונה בתוך תמונה']]},
+    {kind: 'mouse', title: 'עכבר', list: [
+      ['הזזה', 'רשימת הערוצים'], ['★', 'שינוי מועדפים (בפינת ערוץ)'], ['גלגלת', 'מעבר בין שורות'],
+      ['לחיצה כפולה', 'מסך מלא']]},
+    {kind: 'touch', title: 'מגע', list: [
+      ['הקשה על השידור', 'רשימת הערוצים'], ['החלקה ▲▼', 'החלפת ערוץ'],
+      ['הקשה על ערוץ', 'צפייה'], ['לחיצה ארוכה', 'שינוי מועדפים']]},
+  ];
+  const howTo = el('div', 'tv-howto');
+  howTo.append(el('div', 'tv-howto-title', 'איך משתמשים'));
+  const howToGroups = HOW_TO.map(g => {
+    const group = el('div', 'tv-howto-group');
+    group.append(el('div', 'tv-howto-group-title', g.title), hints(g.list));
+    howTo.append(group);
+    return {kind: g.kind, group};
+  });
+  sheetMain.append(howTo);
+
+  function refreshHowTo(){
+    const kinds = TV_DEVICE ? ['remote'] : inputMode === 'touch' ? ['touch'] : ['keyboard', 'mouse'];
+    howToGroups.forEach(g => { g.group.hidden = !kinds.includes(g.kind); });
+  }
 
   const sheetButtons = el('div', 'tv-sheet-actions');
   [
-    {label: 'בדיקת הערוצים מחדש', icon: 'mdi:refresh', run: () => {
+    {label: 'בדיקת הערוצים מחדש', short: 'בדיקה מחדש', icon: 'mdi:refresh', run: () => {
       document.getElementById('retestBtn').click();
       showToast('בודק את הערוצים מחדש…');
     }},
@@ -999,7 +1044,9 @@
     {label: 'סגירה', icon: 'mdi:close', run: () => closeSheet()},
   ].forEach(b => {
     const btn = el('div', 'tv-btn');
-    btn.append(icon(b.icon), el('span', null, b.label));
+    btn.append(icon(b.icon), el('span', b.short ? 'tv-label-full' : null, b.label));
+    if(b.short) btn.append(el('span', 'tv-label-short', b.short));   // (portrait)
+    btn.setAttribute('aria-label', b.label);
     addSheetItem(btn, b.run);
     sheetButtons.append(btn);
   });
@@ -1015,6 +1062,7 @@
     sheetOpen = true;
     clearTimeout(idleTimer);
     refreshSheet();
+    refreshHowTo();
     body.classList.add('tv-sheet-open');
     sheetPanel.scrollTop = 0;
     setFocus(switchEls[0].row);
@@ -1403,6 +1451,7 @@
     const label = on ? 'יציאה ממסך מלא' : 'מסך מלא';
     fullButton.replaceChildren(icon(on ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'), el('span', null, label));
     fullButton.setAttribute('aria-label', label);
+    fitMenu();
   });
 
   /* The wheel moves between rows - in portrait it just scrolls the list -
@@ -1471,6 +1520,7 @@
     applyOrientation();
     relayout();
     fitBar();
+    fitMenu();
   });
 
   /* ---------- START ----------
