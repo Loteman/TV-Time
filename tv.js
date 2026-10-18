@@ -22,6 +22,9 @@
      and typing a name (search).
    - Search (not on the TV itself): a menu button, or typing - the menu row
      becomes a search field and the rows show the matching channels.
+   - All channels (a menu button): the browser rises to fill the screen,
+     under the logo, and nothing plays meanwhile; picking a channel plays
+     it, Back (or the button again) returns to the one that was playing.
    - Touch (a phone or tablet): a tap on the picture shows / hides
      the browser, a vertical swipe on it changes channel, the rows scroll
      with the finger, a tap plays and a long press toggles a favorite.
@@ -208,11 +211,16 @@
     btn.addEventListener('click', () => tvZap(step));
     zapBox.append(btn);
   });
-  // the site's logo, in the middle of the banner / the bar over a page
-  const barBrand = el('div', 'tv-bar-brand');
-  const barBrandName = el('b', null, 'TV ');
-  barBrandName.append(el('span', null, 'TIME'));
-  barBrand.append(icon('mdi:television-classic'), barBrandName);
+  // the site's logo: in the middle of the banner / the bar over a page, and
+  // over the all-channels view
+  function logo(cls){
+    const box = el('div', cls);
+    const name = el('b', null, 'TV ');
+    name.append(el('span', null, 'TIME'));
+    box.append(icon('mdi:television-classic'), name);
+    return box;
+  }
+  const barBrand = logo('tv-bar-brand');
 
   if(TV_DEVICE) info.append(infoAvatar, infoText, infoSide, barBrand);
   else info.append(zapBox, infoAvatar, infoText, infoActions, infoSide, barBrand);
@@ -234,7 +242,9 @@
   statusLine.append(icon('mdi:loading'), statusText);
   const foot = el('div', 'tv-browse-foot');
   foot.append(statusLine);
-  browse.append(menuEl, rowsView, foot);
+  const allHead = el('div', 'tv-all-head');   // (the all-channels view)
+  allHead.append(logo('tv-logo'));
+  browse.append(allHead, menuEl, rowsView, foot);
 
   // settings sheet
   const sheet = el('div', 'tv-sheet');
@@ -427,15 +437,18 @@
      run: () => jumpTo(row => row.kind === 'tv'), shownIf: () => rows.some(row => row.kind === 'tv')},
     {id: 'radio', label: 'רדיו', icon: 'mdi:radio',
      run: () => jumpTo(row => row.kind === 'radio'), shownIf: () => rows.some(row => row.kind === 'radio')},
+    {id: 'all', label: 'כל הערוצים', icon: 'mdi:view-grid-outline', on: () => allMode,
+     run: () => { if(allMode) closeAll(true); else openAll(); }},
     // (typing on the TV's remote is too slow to be worth it)
     {id: 'search', label: 'חיפוש', icon: 'mdi:magnify',
      run: () => openSearch(), shownIf: () => !TV_DEVICE},
-    // the far-end group (the TV's remote has its own volume keys)
+    // the far-end group (the TV's remote has its own volume keys; and in
+    // the all-channels view nothing plays)
     {id: 'volume', media: true, btn: muteBtn, node: volumeBox,
-     run: () => toggleMute(), shownIf: () => !TV_DEVICE && currentSource === 'stream'},
-    {id: 'pip', media: true, btn: pipBtn, run: () => togglePip(), shownIf: () => canPip()},
+     run: () => toggleMute(), shownIf: () => !TV_DEVICE && currentSource === 'stream' && !allMode},
+    {id: 'pip', media: true, btn: pipBtn, run: () => togglePip(), shownIf: () => canPip() && !allMode},
     {id: 'full', label: 'מסך מלא', icon: 'mdi:fullscreen', media: true,
-     run: () => toggleFullscreen(), shownIf: () => !TV_APP && !!document.fullscreenEnabled},
+     run: () => toggleFullscreen(), shownIf: () => !TV_APP && !!document.fullscreenEnabled && !allMode},
     {id: 'settings', label: 'הגדרות', icon: 'mdi:cog-outline', media: true,
      run: () => openSheet()},
   ];
@@ -471,6 +484,7 @@
     menuButtons.forEach(({m, btn, node}) => {
       const shown = !m.shownIf || m.shownIf();
       node.hidden = !shown;
+      if(m.on) btn.classList.toggle('on', m.on());
       if(shown) menuRow.items.push({id: m.id, el: btn, run: m.run});
     });
     menuRow.col = Math.max(0, menuRow.items.findIndex(it => it.id === rememberedId));
@@ -672,7 +686,7 @@
      (also in portrait, where it's long). Distances along a row are measured
      from its start, its right edge; `shift` is how far it has moved along. */
   const nativeRows = () => inputMode === 'touch';
-  const nativeList = () => inputMode === 'touch' || portrait;
+  const nativeList = () => inputMode === 'touch' || portrait || allMode;
 
   function rowView(row){
     const pad = parseFloat(getComputedStyle(row.track).paddingRight) || 0;
@@ -731,7 +745,7 @@
     const top = pos.r === 0 ? 0 : lineUp.el.offsetTop;
     const bottom = lineUp.el.offsetTop + lineUp.el.offsetHeight;
     // portrait shows several rows, so the row only has to be in view
-    if(!portrait) rowsView.scrollTop = top;
+    if(!portrait && !allMode) rowsView.scrollTop = top;
     else if(top < rowsView.scrollTop) rowsView.scrollTop = top;
     else if(bottom > rowsView.scrollTop + rowsView.clientHeight) rowsView.scrollTop = bottom - rowsView.clientHeight;
   }
@@ -784,7 +798,7 @@
   let idleTimer = null;
   function armIdle(){
     clearTimeout(idleTimer);
-    if(!browseOpen || portrait) return;   // in portrait it's part of the page
+    if(!browseOpen || portrait || allMode) return;   // in portrait it's part of the page
     idleTimer = setTimeout(() => {
       if(sheetOpen) return;
       // still being used: under the mouse, or typing a search
@@ -807,7 +821,7 @@
   }
 
   function closeBrowse(){
-    if(!browseOpen || portrait) return;
+    if(!browseOpen || portrait || allMode) return;
     browseOpen = false;
     focusPlayingWhenReady = false;
     clearTimeout(idleTimer);
@@ -872,6 +886,7 @@
   /* ---------- PLAYING ---------- */
   function play(ch){
     if(!ch) return;
+    if(allMode) closeAll(false);
     closeBrowse();
     if(ch.id === currentId && currentSource){ showInfo(INFO_MS); return; }
     const chMode = isRadio(ch) ? 'radio' : 'tv';
@@ -918,9 +933,74 @@
     saveTvSettings();
   }
 
-  // the remote's up / down, a swipe and the banner's arrows
+  // the remote's up / down, a swipe and the banner's arrows (not while the
+  // all-channels view is up - nothing plays then)
   function tvZap(step){
+    if(allMode) return false;
     return zap(step, !!tvSettings.favZap);
+  }
+
+  /* ---------- ALL CHANNELS ----------
+     The menu's "all channels" button: the browser rises to fill the screen,
+     with the logo above it, and the channel stops - nothing plays meanwhile
+     (and the player's controls leave the menu). Picking a channel plays it
+     and goes back to watching; Back, or the button again, brings the
+     browser back down and the channel that was playing back on. */
+  let allMode = false;
+  let allResume = null;   // the channel that was playing: {id, source}
+
+  /* The browser moves to its new place (the change) and is then slid there
+     from where it was - a transform, smooth on a TV box too. */
+  let morphTimer = null;
+  function morphBrowse(change){
+    const before = browse.getBoundingClientRect().top;
+    change();
+    const delta = before - browse.getBoundingClientRect().top;
+    if(Math.abs(delta) < 1) return;
+    browse.style.transition = 'none';
+    browse.style.transform = `translateY(${delta}px)`;
+    void browse.offsetHeight;
+    browse.style.transition = 'transform .32s ease';
+    browse.style.transform = '';
+    clearTimeout(morphTimer);
+    morphTimer = setTimeout(() => { browse.style.transition = ''; }, 400);
+  }
+
+  function setAllMode(on){
+    allMode = on;
+    body.classList.toggle('tv-all', on);
+    relayout();   // (a scrolling list now / again)
+    const cur = menuRow.items[menuRow.col];
+    refreshMenu(cur && cur.id);
+  }
+
+  function openAll(){
+    if(allMode) return;
+    if(!browseOpen) openBrowse();
+    clearTimeout(idleTimer);
+    hideInfo();
+    allResume = currentId && currentSource ? {id: currentId, source: currentSource} : null;
+    if(allResume){
+      stopPlayback();
+      renderList();   // (the cards and the menu: nothing plays)
+    }
+    morphBrowse(() => setAllMode(true));
+  }
+
+  // resume: back to the channel that was playing (else a new one is about to)
+  function closeAll(resume){
+    if(!allMode) return;
+    const back = resume ? allResume : null;
+    allResume = null;
+    if(resume) morphBrowse(() => setAllMode(false));
+    else {
+      // straight to the new channel - no slide back down under it
+      browse.classList.add('tv-no-anim');
+      setAllMode(false);
+      requestAnimationFrame(() => requestAnimationFrame(() => browse.classList.remove('tv-no-anim')));
+    }
+    if(back && back.id === currentId) selectChannel(back.id, back.source);
+    armIdle();
   }
 
   const SWITCHES = [
@@ -1255,6 +1335,7 @@
   window.tvBack = function(){
     if(sheetOpen){ closeSheet(); return true; }
     if(searching){ closeSearch(); focusMenu('search'); return true; }
+    if(allMode){ closeAll(true); return true; }
     if(browseOpen){ closeBrowse(); return true; }
     if(!TV_APP) return true;   // a browser has nothing to exit
     if(Date.now() - exitArmedAt < EXIT_CONFIRM_MS) return false;

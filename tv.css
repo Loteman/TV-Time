@@ -875,3 +875,48 @@ body.tv-portrait .tv-live{display:none;}
 }
 .tv-search-close:hover{color:#fff;background:rgba(255,255,255,.15);}
 body.tv-portrait .tv-search{max-width:none;height:calc(36 * var(--u));}
+
+/* ALL CHANNELS (the menu's button) - see tv.js. The browser fills the
+   screen, the logo above it, its rows a scrolling list; nothing plays. */
+.tv-all-head{
+  display:none;
+  flex-shrink:0;
+  justify-content:center;
+  padding:var(--tv-safe-y) 0 calc(14 * var(--u));
+}
+body.tv-all .tv-all-head{display:flex;}
+.tv-logo{
+  display:flex;
+  align-items:center;
+  gap:calc(8 * var(--u));
+  font-size:calc(22 * var(--u));
+  letter-spacing:calc(.3 * var(--u));
+  white-space:nowrap;
+}
+.tv-logo b{font-weight:900;}
+.tv-logo b span,
+.tv-logo .tv-icon{color:var(--yellow);}
+.tv-logo .tv-icon{font-size:calc(26 * var(--u));}
+body.tv-all .tv-info{display:none;}
+body.tv-all .tv-ui{padding-top:0;}   /* (portrait: no picture above it) */
+body.tv-all .tv-browse{
+  top:0;
+  display:flex;
+  flex-direction:column;
+  padding-top:0;
+  background:#0b0e13;
+}
+body.tv-all .tv-menu,
+body.tv-all .tv-browse-foot{flex-shrink:0;}
+body.tv-all .tv-rows{
+  flex:1;
+  height:auto;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:none;
+}
+body.tv-all .tv-rows::-webkit-scrollbar{display:none;}
+body.tv-all:not(.tv-touch) .tv-rows{scroll-behavior:smooth;}
+/* the button while its view is up */
+.tv-btn.on{box-shadow:inset 0 0 0 calc(2 * var(--u)) var(--yellow);color:var(--yellow);}
