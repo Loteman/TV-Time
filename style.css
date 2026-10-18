@@ -265,6 +265,43 @@ header{
 }
 .player-empty iconify-icon{font-size:44px;color:var(--surface3);}
 
+/* radio in the direct player: the station instead of a black picture */
+.radio-art{
+  position:absolute;inset:0;
+  z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;
+}
+.radio-art-avatar{
+  width:96px;height:96px;border-radius:24px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:34px;font-weight:900;
+}
+.radio-art-name{font-size:22px;font-weight:800;}
+.radio-eq{display:flex;align-items:flex-end;gap:5px;height:28px;}
+.radio-eq span{
+  width:6px;height:100%;
+  border-radius:3px;
+  background:var(--radio);
+  transform-origin:bottom;
+  animation:eq 1.1s ease-in-out infinite;
+}
+.radio-eq span:nth-child(2){animation-duration:.8s;animation-delay:-.3s;}
+.radio-eq span:nth-child(3){animation-duration:1.3s;animation-delay:-.6s;}
+.radio-eq span:nth-child(4){animation-duration:.9s;animation-delay:-.1s;}
+.radio-eq span:nth-child(5){animation-duration:1.2s;animation-delay:-.8s;}
+.radio-art.paused .radio-eq span{animation-play-state:paused;}
+@keyframes eq{
+  0%,100%{transform:scaleY(.25);}
+  50%{transform:scaleY(1);}
+}
+@media(max-width:700px){
+  .radio-art{gap:9px;}
+  .radio-art-avatar{width:60px;height:60px;border-radius:16px;font-size:22px;}
+  .radio-art-name{font-size:17px;}
+  .radio-eq{height:20px;}
+}
+
 .zap-btn{
   position:absolute;
   top:50%;transform:translateY(-50%);
@@ -446,7 +483,7 @@ header{
 }
 .np-text .title{font-weight:700;font-size:15px;}
 .np-text .sub{color:var(--muted);font-size:12px;margin-top:2px;}
-.np-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;align-items:center;}
+.np-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;align-items:center;max-width:100%;}
 .source-toggle{
   display:flex;
   gap:2px;
@@ -635,6 +672,7 @@ header{
   font-size:12.5px;
   cursor:pointer;
   width:100%;
+  text-decoration:none;
 }
 .retest-btn:hover{border-color:var(--yellow);color:var(--yellow);}
 .retest-btn iconify-icon{font-size:14px;}
@@ -801,4 +839,14 @@ header{
   .ac-card{padding:10px 6px;}
   .ac-section-title{font-size:19px;gap:9px;}
   .ac-section-title iconify-icon{font-size:24px;}
+}
+
+/* a longer avatar label (a radio station's short name) gets a smaller font
+   to fit its box - see setAvatar() */
+.ch-avatar.avatar-long{font-size:10px;}
+.np-avatar.avatar-long{font-size:11px;}
+.ac-avatar.avatar-long{font-size:12px;}
+.radio-art-avatar.avatar-long{font-size:24px;}
+@media(max-width:700px){
+  .radio-art-avatar.avatar-long{font-size:15px;}
 }

@@ -1,6 +1,9 @@
 /* ---------- CHANNEL DATA ----------
    `url` is the broadcaster's page, shown in an iframe. `stream` is a direct
-   HLS stream (sourced from the iptv-org project) that plays in our own <video>.
+   stream that plays in our own player: HLS (.m3u8) or a plain audio stream
+   such as MP3 radio. Streams are the broadcasters' own public addresses, as
+   their official sites' players use them or as listed by the iptv-org
+   project.
    A channel has at least one of them: with both, the stream plays first and
    the page is the fallback and a manual option; stream-only channels have no
    page to fall back to. `label` overrides the avatar text. */
@@ -30,7 +33,8 @@ const TV_CHANNELS = [
    url:'https://www.knesset.tv/live/',
    stream:'https://contact.gostreaming.tv/Knesset/myStream/playlist.m3u8'},  // only live during sessions
   {id:'chinuchit', name:'כאן החינוכית', group:'ילדים', color:'#2f6fed', remoteNumber:80,
-   url:'https://www.kan.org.il/live/?stationId=4471#'},
+   url:'https://www.kan.org.il/live/?stationId=4471#',
+   stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/kan_edu/live.livx/playlist.m3u8?renditions&fmp4'},
   {id:'ch24', name:'ערוץ 24', group:'תרבות, בידור ומוזיקה', color:'#1c8c5b', remoteNumber:24,
    url:'https://www.mako.co.il/mako-vod-live-tv/VOD-b3480d2eff3fd31006.htm?sCh=3377c13070733210&pId=935020712'},
   {id:'hidabroot', name:'הידברות', group:'דת ומסורת', color:'#4f9ddc', remoteNumber:97,
@@ -56,28 +60,38 @@ const TV_CHANNELS = [
 
 const RADIO_CHANNELS = [
   /* Galei Tzahal (IDF radio) - national */
-  {id:'galgalatz', name:'גלגל"צ', group:'רדיו ארצי - גלי צה"ל', color:'#4fc3dc',
-   url:'https://glz.co.il/%D7%92%D7%9C%D7%92%D7%9C%D7%A6/'},
-  {id:'galatz', name:'גל"צ', group:'רדיו ארצי - גלי צה"ל', color:'#2f9ddc',
-   url:'https://glz.co.il/%D7%92%D7%9C%D7%A6/'},
+  {id:'galgalatz', name:'גלגל"צ', group:'רדיו ארצי - גלי צה"ל', color:'#4fc3dc', label:'גלגלצ',
+   url:'https://glz.co.il/%D7%92%D7%9C%D7%92%D7%9C%D7%A6/',
+   stream:'https://glzwizzlv.bynetcdn.com/glglz_mp3?awCollectionId=misc&awEpisodeId=glglz'},
+  {id:'galatz', name:'גל"צ', group:'רדיו ארצי - גלי צה"ל', color:'#2f9ddc', label:'גלצ',
+   url:'https://glz.co.il/%D7%92%D7%9C%D7%A6/',
+   stream:'https://api.bynetcdn.com/Redirector/glz/glz/ICE-LIVE?tn=&ts=1484121989'},
 
   /* Israeli Public Broadcasting Corporation (Kan) */
-  {id:'reshetbet', name:'כאן ב׳', group:'רדיו תאגיד השידור (כאן)', color:'#e0555f',
-   url:'https://www.kan.org.il/live/?stationId=4483#'},
-  {id:'kantarbut', name:'כאן תרבות', group:'רדיו תאגיד השידור (כאן)', color:'#1c8c5b',
-   url:'https://www.kan.org.il/live/?stationId=4497#'},
-  {id:'kangimel', name:'כאן גימל', group:'רדיו תאגיד השידור (כאן)', color:'#dc6f1a',
-   url:'https://www.kan.org.il/live/?stationId=4490#'},
-  {id:'kan88', name:'כאן 88', group:'רדיו תאגיד השידור (כאן)', color:'#7a4fdc',
-   url:'https://www.kan.org.il/live/?stationId=4504#'},
-  {id:'kanreka', name:'כאן רק"ע', group:'רדיו תאגיד השידור (כאן)', color:'#b08a2e',
-   url:'https://www.kan.org.il/live/?stationId=4525#'},
-  {id:'kanmorasha', name:'כאן מורשת', group:'רדיו תאגיד השידור (כאן)', color:'#dc8a1a',
-   url:'https://www.kan.org.il/live/?stationId=4511#'},
-  {id:'kanmusic', name:'כאן קול המוסיקה', group:'רדיו תאגיד השידור (כאן)', color:'#e05fa0',
-   url:'https://www.kan.org.il/live/?stationId=4518#'},
-  {id:'kanarabic', name:'רדיו מכאן', group:'רדיו תאגיד השידור (כאן)', color:'#4fb0dc',
-   url:'https://www.kan.org.il/live/?stationId=358568#'},
+  {id:'reshetbet', name:'כאן ב׳', group:'רדיו תאגיד השידור (כאן)', color:'#e0555f', label:'ב׳',
+   url:'https://www.kan.org.il/live/?stationId=4483#',
+   stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_reshet_bet/live.livx/playlist.m3u8?renditions'},
+  {id:'kantarbut', name:'כאן תרבות', group:'רדיו תאגיד השידור (כאן)', color:'#1c8c5b', label:'תרבות',
+   url:'https://www.kan.org.il/live/?stationId=4497#',
+   stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_tarbut/live.livx/playlist.m3u8?renditions'},
+  {id:'kangimel', name:'כאן גימל', group:'רדיו תאגיד השידור (כאן)', color:'#dc6f1a', label:'גימל',
+   url:'https://www.kan.org.il/live/?stationId=4490#',
+   stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_gimel/live.livx/playlist.m3u8?renditions'},
+  {id:'kan88', name:'כאן 88', group:'רדיו תאגיד השידור (כאן)', color:'#7a4fdc', label:'88',
+   url:'https://www.kan.org.il/live/?stationId=4504#',
+   stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_88/live.livx/playlist.m3u8?renditions'},
+  {id:'kanreka', name:'כאן רק"ע', group:'רדיו תאגיד השידור (כאן)', color:'#b08a2e', label:'רק"ע',
+   url:'https://www.kan.org.il/live/?stationId=4525#',
+   stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_reka/live.livx/playlist.m3u8?renditions'},
+  {id:'kanmorasha', name:'כאן מורשת', group:'רדיו תאגיד השידור (כאן)', color:'#dc8a1a', label:'מורשת',
+   url:'https://www.kan.org.il/live/?stationId=4511#',
+   stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_moreshet/live.livx/playlist.m3u8?renditions'},
+  {id:'kanmusic', name:'כאן קול המוסיקה', group:'רדיו תאגיד השידור (כאן)', color:'#e05fa0', label:'מוזיקה',
+   url:'https://www.kan.org.il/live/?stationId=4518#',
+   stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/kan_kol_hamuzika/live.livx/playlist.m3u8?renditions'},
+  {id:'kanarabic', name:'רדיו מכאן', group:'רדיו תאגיד השידור (כאן)', color:'#4fb0dc', label:'مكان',
+   url:'https://www.kan.org.il/live/?stationId=358568#',
+   stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/radio/radio_makan/live.livx/playlist.m3u8?renditions'},
 
   /* Regional stations */
   {id:'kolbarama', name:'קול ברמה', group:'רדיו אזורי', color:'#8a6fdc',

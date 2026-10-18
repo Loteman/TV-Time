@@ -1,0 +1,374 @@
+/* TV TIME - the TV (remote control) interface; see tv.js. Everything here is
+   scoped to TV mode (body.tv-mode, or elements tv.js only creates there), so
+   the desktop and mobile layouts are untouched. Sizes are for the TV's
+   960x540 CSS-pixel screen (1080p at density 2, as on the Mi Box), with a
+   safe area kept clear of the screen edges. Only opacity / transform are
+   animated, which stays smooth on weak TV boxes. */
+
+body.tv-mode{
+  --tv-safe-x:48px;
+  --tv-safe-y:26px;
+  height:100vh;
+  min-height:0;
+  overflow:hidden;
+  background:#000;
+}
+
+/* the desktop / mobile interface is replaced by the full-screen player */
+body.tv-mode > header,
+body.tv-mode .sidebar,
+body.tv-mode .side-controls,
+body.tv-mode .now-playing,
+body.tv-mode .all-channels-overlay,
+body.tv-mode .zap-btn{display:none !important;}
+body.tv-mode :focus{outline:none;}
+
+body.tv-mode .player-shell{
+  position:fixed;
+  inset:0;
+  z-index:1;
+  border:0;
+  border-radius:0;
+  aspect-ratio:auto;
+}
+body.tv-mode .player-empty{gap:16px;}
+body.tv-mode .player-empty iconify-icon{font-size:76px;}
+body.tv-mode .player-empty > div:not(.tv-hints){font-size:24px;color:#d6dbe3;}
+body.tv-mode .player-empty .tv-hints{margin-top:4px;font-size:15px;}
+body.tv-mode .radio-art{gap:22px;}
+body.tv-mode .radio-art-avatar{width:150px;height:150px;border-radius:34px;font-size:54px;}
+body.tv-mode .radio-art-avatar.avatar-long{font-size:36px;}
+body.tv-mode .radio-art-name{font-size:34px;}
+body.tv-mode .radio-eq{height:44px;gap:7px;}
+body.tv-mode .radio-eq span{width:9px;border-radius:5px;}
+body.tv-mode .loading-overlay{gap:18px;}
+body.tv-mode .loading-overlay span{font-size:24px;font-weight:700;}
+body.tv-mode .loading-bar{width:280px;height:5px;}
+
+/* toasts show above the overlays (tv.js moves the toast into .tv-ui) */
+body.tv-mode .player-toast{
+  top:auto;
+  bottom:calc(var(--tv-safe-y) + 6px);
+  font-size:17px;
+  padding:10px 22px;
+  z-index:5;
+}
+body.tv-browse-open .player-toast{bottom:auto;top:118px;}
+
+.tv-ui{
+  position:fixed;
+  inset:0;
+  z-index:10;
+  pointer-events:none;
+}
+.tv-no-anim,
+.tv-no-anim *{transition:none !important;}
+.tv-icon{
+  display:inline-block;
+  width:1em;
+  height:1em;
+  flex-shrink:0;
+  fill:currentColor;
+}
+
+/* remote-key hints */
+.tv-hints{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px 20px;
+  font-size:13px;
+  color:#b8c0cb;
+}
+.tv-hints > span{display:inline-flex;align-items:center;gap:7px;}
+.tv-key{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:26px;
+  height:22px;
+  padding:0 7px;
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:6px;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+}
+
+/* INFO BANNER (top) */
+.tv-info{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:var(--tv-safe-y) var(--tv-safe-x) 44px;
+  background:linear-gradient(180deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.55) 55%,rgba(0,0,0,0) 100%);
+  opacity:0;
+  transform:translateY(-16px);
+  transition:opacity .25s ease,transform .25s ease;
+}
+body.tv-info-show .tv-info,
+body.tv-browse-open .tv-info{opacity:1;transform:none;}
+.tv-info-avatar{
+  width:60px;
+  height:60px;
+  flex-shrink:0;
+  border-radius:14px;
+  background:var(--surface3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:900;
+}
+.tv-info-avatar.avatar-long{font-size:15px;}
+.tv-info-text{min-width:0;}
+.tv-info-name{font-size:26px;font-weight:800;line-height:1.15;}
+.tv-info-sub{font-size:15px;color:#c3cad4;margin-top:3px;}
+.tv-info-hint{margin-top:9px;}
+body.tv-browse-open .tv-info-hint{display:none;}
+.tv-info-side{
+  margin-inline-start:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:7px;
+}
+.tv-clock{font-size:28px;font-weight:700;letter-spacing:.5px;}
+.tv-live{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:#d83a44;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  padding:3px 9px;
+  border-radius:6px;
+}
+.tv-live-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#fff;
+  animation:pulse 1.4s infinite ease-in-out;
+}
+
+/* CHANNEL BROWSER (bottom) */
+.tv-browse{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:64px 0 var(--tv-safe-y);
+  background:linear-gradient(0deg,rgba(6,8,12,.97) 0%,rgba(6,8,12,.9) 74%,rgba(6,8,12,0) 100%);
+  opacity:0;
+  transform:translateY(30px);
+  transition:opacity .25s ease,transform .25s ease;
+}
+body.tv-browse-open .tv-browse{opacity:1;transform:none;}
+
+.tv-menu{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 var(--tv-safe-x) 8px;
+}
+.tv-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  height:40px;
+  padding:0 18px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  color:#dfe4ea;
+  font-size:15px;
+  font-weight:700;
+  white-space:nowrap;
+  transition:transform .12s ease,background-color .12s ease,color .12s ease;
+}
+.tv-btn .tv-icon{font-size:19px;}
+.tv-btn.tv-focus{background:var(--yellow);color:#1a1500;transform:scale(1.06);}
+.tv-brand{margin-inline-start:auto;font-size:19px;font-weight:900;letter-spacing:.3px;}
+.tv-brand span{color:var(--yellow);}
+
+.tv-rows{height:204px;overflow:hidden;}
+.tv-rows-strip{position:relative;transition:transform .25s ease;}
+.tv-row{padding-top:6px;}
+.tv-row-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 var(--tv-safe-x);
+  font-size:17px;
+  font-weight:800;
+  color:#e9edf2;
+}
+.tv-row-title .tv-icon{color:var(--yellow);font-size:19px;}
+.tv-row-count{color:var(--muted);font-size:13px;font-weight:600;}
+.tv-track{overflow:hidden;padding:12px var(--tv-safe-x) 16px;}
+.tv-strip{
+  position:relative;
+  display:flex;
+  gap:14px;
+  width:max-content;
+  transition:transform .22s ease;
+}
+
+.tv-card{
+  position:relative;
+  flex:0 0 148px;
+  height:96px;
+  border-radius:12px;
+  border:2px solid rgba(255,255,255,.07);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease;
+}
+.tv-card.tv-focus{
+  transform:scale(1.1);
+  border-color:var(--yellow);
+  box-shadow:0 10px 26px rgba(0,0,0,.65);
+  z-index:2;
+}
+.tv-card-label{font-size:30px;font-weight:900;line-height:1;}
+.tv-card-label.avatar-long{font-size:26px;}
+.tv-card-name{
+  max-width:88%;
+  font-size:14px;
+  font-weight:600;
+  color:#eef1f6;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+/* the status dot only shows when it isn't green - working is the norm here */
+.tv-card-dot{
+  display:none;
+  position:absolute;
+  top:9px;
+  left:9px;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+}
+.tv-card[data-status="timeout"] .tv-card-dot{display:block;background:#e0b30b;}
+.tv-card[data-status="blocked"] .tv-card-dot{display:block;background:#e0555f;}
+.tv-card-fav{
+  display:none;
+  position:absolute;
+  top:7px;
+  right:8px;
+  font-size:16px;
+  color:var(--yellow);
+}
+.tv-card.fav .tv-card-fav{display:block;}
+.tv-card.playing{border-color:rgba(240,185,11,.55);}
+.tv-card-playing{
+  display:none;
+  position:absolute;
+  bottom:-11px;
+  left:50%;
+  transform:translateX(-50%);
+  align-items:center;
+  gap:4px;
+  padding:2px 9px;
+  border-radius:999px;
+  background:var(--yellow);
+  color:#1a1500;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.tv-card-playing .tv-icon{font-size:13px;}
+.tv-card.playing .tv-card-playing{display:inline-flex;}
+
+.tv-empty{padding:34px var(--tv-safe-x);font-size:17px;color:var(--muted);}
+
+.tv-browse-foot{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding:4px var(--tv-safe-x) 0;
+}
+.tv-status-line{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);}
+.tv-status-line .tv-icon{color:var(--yellow);font-size:16px;animation:spin .9s linear infinite;}
+.tv-browse-foot .tv-hints{margin-inline-start:auto;}
+
+/* SETTINGS SHEET */
+.tv-sheet{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.62);
+  opacity:0;
+  transition:opacity .2s ease;
+}
+body.tv-sheet-open .tv-sheet{opacity:1;}
+body:not(.tv-sheet-open) .tv-sheet{visibility:hidden;}
+.tv-sheet-panel{
+  width:600px;
+  max-width:calc(100% - 2 * var(--tv-safe-x));
+  background:#161b23;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:22px 26px 24px;
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+}
+.tv-sheet-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:22px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+.tv-sheet-title .tv-icon{color:var(--yellow);font-size:24px;}
+.tv-switch{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-top:10px;
+  padding:12px 16px;
+  border-radius:14px;
+  background:#1f252f;
+  border:2px solid transparent;
+  transition:border-color .12s ease,transform .12s ease;
+}
+.tv-switch.tv-focus{border-color:var(--yellow);transform:scale(1.02);}
+.tv-switch-text{flex:1;min-width:0;}
+.tv-switch-label{font-size:17px;font-weight:700;}
+.tv-switch-note{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.45;}
+.tv-switch-knob{
+  position:relative;
+  flex-shrink:0;
+  width:52px;
+  height:30px;
+  border-radius:999px;
+  background:#3a4350;
+  transition:background-color .15s ease;
+}
+.tv-switch-knob::after{
+  content:'';
+  position:absolute;
+  top:4px;
+  right:4px;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#cfd5dd;
+  transition:transform .15s ease,background-color .15s ease;
+}
+.tv-switch.on .tv-switch-knob{background:#3fce6f;}
+.tv-switch.on .tv-switch-knob::after{transform:translateX(-22px);background:#fff;}
+.tv-sheet-actions{display:flex;gap:10px;margin-top:22px;}
+.tv-sheet-actions .tv-btn{flex:1;justify-content:center;height:44px;}

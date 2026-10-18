@@ -1,4 +1,11 @@
 /* ---------- STATE ---------- */
+/* TV (remote control) mode: on in the Android TV app, which adds "TVTimeApp"
+   to its user agent, or with ?tv in the address for testing in a browser.
+   The TV interface itself lives in tv.js / tv.css; desktop and mobile
+   behavior is unchanged when it's off. */
+const TV_MODE = /TVTimeApp/.test(navigator.userAgent) || new URLSearchParams(location.search).has('tv');
+if(TV_MODE) document.body.classList.add('tv-mode');
+
 let mode = 'tv';               // 'tv' | 'radio'
 let currentId = null;
 /* Favorites persist in localStorage. First-time visitors (nothing saved yet)
@@ -104,6 +111,14 @@ function avatarLabel(ch){
   return ch.label || (ch.remoteNumber ? String(ch.remoteNumber) : initials(ch.name));
 }
 
+/* Fills an avatar box with the channel's label; a longer one (a radio
+   station's short name) gets a smaller font so it fits the box. */
+function setAvatar(el, ch){
+  const label = avatarLabel(ch);
+  el.textContent = label;
+  el.classList.toggle('avatar-long', label.length > 3);
+}
+
 /* ---------- RENDER LIST ---------- */
 /* One set of filters (status, source, favorites, search) for both the
    sidebar list and the all-channels page. */
@@ -131,6 +146,7 @@ function emptyListMessage(list){
 function renderList(){
   renderSidebarList();
   if(viewingAllChannels) renderAllChannelsView();
+  if(window.tvRender) tvRender();   // the TV interface (tv.js) has its own channel rows
 }
 
 function renderSidebarList(){
@@ -168,7 +184,7 @@ function renderSidebarList(){
       avatar.className = 'ch-avatar';
       avatar.style.background = c.color + '33';
       avatar.style.color = c.color;
-      avatar.textContent = avatarLabel(c);
+      setAvatar(avatar, c);
 
       const nameEl = document.createElement('div');
       nameEl.className = 'ch-name';
@@ -309,31 +325,68 @@ function testLink(ch, timeoutMs){
   });
 }
 
+/* A `stream` is HLS (a .m3u8 playlist, played with hls.js) or a plain
+   media stream the browser plays by itself (e.g. MP3 radio). */
+function isHls(url){
+  return /\.m3u8(\?|$)/i.test(url);
+}
+
 async function fetchPlaylist(url, signal){
   const res = await fetch(url, {signal, cache:'no-store'});
   if(!res.ok) throw new Error('HTTP ' + res.status);
-  return res.text();
+  // relative entries resolve against where the playlist really is (after redirects)
+  return {text: await res.text(), url: res.url || url};
 }
 
 /* Direct stream test - unlike the iframe heuristic this checks the real
-   thing: the playlist must load (which also proves CORS lets us play it) and
+   thing. Returns true, false, or 'timeout' when it simply didn't answer in
+   time. */
+function testStream(ch, timeoutMs){
+  return isHls(ch.stream) ? testHlsStream(ch.stream, timeoutMs) : testMediaStream(ch.stream, timeoutMs);
+}
+
+/* HLS: the playlist must load (which also proves CORS lets us play it) and
    actually list media segments. */
-async function testStream(ch, timeoutMs){
+async function testHlsStream(url, timeoutMs){
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    let text = await fetchPlaylist(ch.stream, ctrl.signal);
-    if(text.includes('#EXT-X-STREAM-INF')){
+    let playlist = await fetchPlaylist(url, ctrl.signal);
+    if(playlist.text.includes('#EXT-X-STREAM-INF')){
       // master playlist - check the first quality variant too
-      const variant = text.split('\n').map(l => l.trim()).find(l => l && !l.startsWith('#'));
-      text = await fetchPlaylist(new URL(variant, ch.stream).href, ctrl.signal);
+      const variant = playlist.text.split('\n').map(l => l.trim()).find(l => l && !l.startsWith('#'));
+      playlist = await fetchPlaylist(new URL(variant, playlist.url).href, ctrl.signal);
     }
-    return text.includes('#EXTINF');
+    return playlist.text.includes('#EXTINF');
   } catch(e){
-    return false;   // HTTP error, CORS/network block or timeout
+    if(ctrl.signal.aborted) return 'timeout';
+    return false;   // HTTP error or CORS/network block
   } finally {
     clearTimeout(timer);
   }
+}
+
+/* A plain media stream never ends, so instead of downloading it, a silent
+   media element loads it until the browser knows it can decode it. */
+function testMediaStream(url, timeoutMs){
+  return new Promise(resolve => {
+    const media = new Audio();
+    let settled = false;
+    const finish = (result) => {
+      if(settled) return;
+      settled = true;
+      clearTimeout(timer);
+      media.removeAttribute('src');
+      media.load();   // stops the download
+      resolve(result);
+    };
+    const timer = setTimeout(() => finish('timeout'), timeoutMs);
+    media.muted = true;
+    media.preload = 'metadata';
+    media.addEventListener('loadedmetadata', () => finish(true));
+    media.addEventListener('error', () => finish(false));
+    media.src = url;
+  });
 }
 
 async function testOneChannel(ch, timeoutMs){
@@ -343,10 +396,13 @@ async function testOneChannel(ch, timeoutMs){
     renderList();
   }
 
-  const [streamOk, linkStatus] = await Promise.all([
+  // the TV never offers a broadcaster page (only as a stream's fallback), so
+  // it doesn't load one to test it - the page counts as unverified there
+  const [streamResult, linkStatus] = await Promise.all([
     ch.stream ? testStream(ch, timeoutMs) : null,
-    testLink(ch, timeoutMs),
+    TV_MODE ? (ch.url ? 'timeout' : null) : testLink(ch, timeoutMs),
   ]);
+  const streamOk = streamResult === null ? null : streamResult === true;
   ch.streamOk = streamOk;
   ch.linkStatus = linkStatus;
   // the player tries a working stream first, otherwise the viewer gets the
@@ -355,6 +411,57 @@ async function testOneChannel(ch, timeoutMs){
   ch.status = streamOk ? 'ok' : (linkStatus || 'blocked');
   renderList();
   saveStatuses();
+
+  if(streamResult === 'timeout') recheckStream(ch, RECHECK_TRIES);
+  if(linkStatus === 'timeout' && !isUnverifiable(ch) && !TV_MODE) recheckLink(ch, RECHECK_TRIES);
+}
+
+/* A check that was only slow (e.g. while the page itself was loading, or on
+   a slow TV box) gets more, unhurried tries in the background. They run a few
+   at a time - all at once they'd slow each other down again on a weak
+   device - and aren't awaited, so the run's progress still finishes on time. */
+const RECHECK_TRIES = 3;
+const RECHECK_CONCURRENCY = 4;
+const recheckQueue = [];
+let rechecksRunning = 0;
+
+function queueRecheck(job){
+  recheckQueue.push(job);
+  runRechecks();
+}
+
+function runRechecks(){
+  while(rechecksRunning < RECHECK_CONCURRENCY && recheckQueue.length){
+    rechecksRunning++;
+    recheckQueue.shift()().finally(() => {
+      rechecksRunning--;
+      runRechecks();
+    });
+  }
+}
+
+function recheckStream(ch, triesLeft){
+  queueRecheck(async () => {
+    const result = await testStream(ch, RECHECK_TIMEOUT_MS);
+    if(result === 'timeout' && triesLeft > 1) recheckStream(ch, triesLeft - 1);
+    if(result !== true || ch.streamOk) return;
+    ch.streamOk = true;
+    ch.status = 'ok';
+    renderList();
+    saveStatuses();
+  });
+}
+
+function recheckLink(ch, triesLeft){
+  queueRecheck(async () => {
+    const result = await testLink(ch, RECHECK_TIMEOUT_MS);
+    if(result === 'timeout' && triesLeft > 1) recheckLink(ch, triesLeft - 1);
+    if(result === 'timeout' || ch.linkStatus !== 'timeout') return;
+    ch.linkStatus = result;
+    if(!ch.streamOk) ch.status = result;
+    renderList();
+    saveStatuses();
+  });
 }
 
 const statusProgress = document.getElementById('statusProgress');
@@ -365,6 +472,7 @@ const testsInFlight = new Set();  // ids being tested right now, by any run
 /* Both checks of a channel share this budget, so a whole run takes at most
    about this long - whatever hasn't answered by then counts as "unclear". */
 const TEST_TIMEOUT_MS = 3000;
+const RECHECK_TIMEOUT_MS = 10000;
 
 async function testChannels(list){
   const runId = ++testRunId;
@@ -393,9 +501,11 @@ async function testChannels(list){
 /* Every channel, TV and radio, is tested in parallel once when the site
    loads; switching tabs only shows results that are already there. Each
    channel is tested once per run, and one that an earlier run is still
-   testing isn't queued again (its fresh result is on the way). */
+   testing isn't queued again (its fresh result is on the way). The TV shows
+   only channels with a direct stream, so it tests only those. */
 function runAllTests(){
-  testChannels([...TV_CHANNELS, ...RADIO_CHANNELS].filter(c => !testsInFlight.has(c.id)));
+  testChannels([...TV_CHANNELS, ...RADIO_CHANNELS]
+    .filter(c => (!TV_MODE || c.stream) && !testsInFlight.has(c.id)));
 }
 
 document.getElementById('retestBtn').addEventListener('click', () => {
@@ -439,6 +549,24 @@ let streamStartTimer = null;
 let overlayTimer = null;
 let toastTimer = null;
 
+/* Radio has no picture: while a station plays in the direct player, the
+   screen shows the station (its equalizer moves while sound plays) instead
+   of a black video. */
+const radioArt = document.getElementById('radioArt');
+const radioArtAvatar = document.getElementById('radioArtAvatar');
+const radioArtName = document.getElementById('radioArtName');
+
+function showRadioArt(ch){
+  // the solid base layer keeps the (empty) video underneath from showing through
+  radioArt.style.background = `radial-gradient(circle at 50% 38%, ${ch.color}45, #0b0e13 72%), #0b0e13`;
+  setAvatar(radioArtAvatar, ch);
+  radioArtAvatar.style.background = ch.color + '33';
+  radioArtAvatar.style.color = ch.color;
+  radioArtName.textContent = ch.name;
+  radioArt.classList.add('paused');
+  radioArt.hidden = false;
+}
+
 function showToast(text){
   playerToast.textContent = text;
   playerToast.classList.add('show');
@@ -447,7 +575,9 @@ function showToast(text){
 }
 
 function applyBrightness(){
-  const filter = `brightness(${brightnessValue}%)`;
+  // no filter at all at 100%: even a neutral one can keep weaker devices
+  // (TV boxes) from playing the video on their hardware video layer
+  const filter = brightnessValue === 100 ? '' : `brightness(${brightnessValue}%)`;
   playerVideo.style.filter = filter;
   const iframe = playerShell.querySelector('iframe');
   if(iframe) iframe.style.filter = filter;
@@ -465,6 +595,7 @@ function stopPlayback(){
   playerVideo.removeAttribute('src');
   playerVideo.load();
   playerVideo.hidden = true;
+  radioArt.hidden = true;
   const oldFrame = playerShell.querySelector('iframe');
   if(oldFrame) oldFrame.remove();
   linkStopped = false;
@@ -475,6 +606,8 @@ function startLink(ch){
   const iframe = document.createElement('iframe');
   iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
   iframe.setAttribute('allowfullscreen', 'true');
+  // on TV, focus inside a cross-origin page would trap the remote's arrows
+  if(TV_MODE) iframe.tabIndex = -1;
   iframe.src = ch.url;
   playerShell.insertBefore(iframe, playerShell.firstChild);
   applyBrightness();
@@ -500,9 +633,13 @@ function startStream(ch){
   playerVideo.volume = volumeValue / 100;
   playerVideo.muted = isMuted;
   applyBrightness();
+  if(RADIO_CHANNELS.includes(ch)) showRadioArt(ch);
   streamStartTimer = setTimeout(fail, STREAM_START_TIMEOUT_MS);
 
-  if(window.Hls && Hls.isSupported()){
+  if(!isHls(ch.stream)){
+    playerVideo.src = ch.stream;   // a plain media stream (e.g. MP3 radio) - played natively
+    playVideo(seq);
+  } else if(window.Hls && Hls.isSupported()){
     const player = new Hls();
     hls = player;
     let recoveredOnce = false;
@@ -537,15 +674,24 @@ function showPlayerMessage(text, icon){
 }
 
 /* The stream didn't start or died: fall back to the broadcaster's page, or -
-   for a stream-only channel - say it's unavailable right now. */
+   for a stream-only channel, and always on TV, which never shows broadcaster
+   pages - say it's unavailable right now. On TV a failed start first gets
+   one automatic retry: a TV box that just woke up may still be connecting. */
+const STREAM_RETRY_DELAY_MS = 2000;
+
 function onStreamFailed(ch){
   ch.streamOk = false;
   ch.status = ch.url ? (ch.linkStatus || 'timeout') : 'blocked';
   stopPlayback();
-  if(ch.url){
+  if(ch.url && !TV_MODE){
     loadingOverlay.classList.remove('hide');
     startLink(ch);
     showToast('השידור הישיר לא זמין כרגע - עברנו לאתר המשדר');
+  } else if(TV_MODE && !ch.retriedStream){
+    ch.retriedStream = true;
+    setTimeout(() => {
+      if(currentId === ch.id && !currentSource) selectChannel(ch.id, 'stream');
+    }, STREAM_RETRY_DELAY_MS);
   } else {
     loadingOverlay.classList.add('hide');
     showPlayerMessage('השידור של הערוץ הזה לא זמין כרגע', 'mdi:television-off');
@@ -556,11 +702,18 @@ function onStreamFailed(ch){
   saveStatuses();
 }
 
+// the radio equalizer moves only while sound actually plays
+['pause', 'waiting', 'emptied'].forEach(type => {
+  playerVideo.addEventListener(type, () => radioArt.classList.add('paused'));
+});
+
 playerVideo.addEventListener('playing', () => {
   if(currentSource !== 'stream') return;
   clearTimeout(streamStartTimer);
   loadingOverlay.classList.add('hide');
+  radioArt.classList.remove('paused');
   const ch = findChannel(currentId);
+  if(ch) ch.retriedStream = false;   // a later failure gets its own automatic retry
   if(ch && !ch.streamOk){
     ch.streamOk = true;
     ch.status = 'ok';
@@ -580,7 +733,8 @@ function selectChannel(id, source){
   if(!ch) return;
   currentId = id;
   if(!ch.stream) source = 'link';
-  else if(!ch.url) source = 'stream';   // stream-only: always worth a (re)try
+  // stream-only, or on TV (no broadcaster pages there): always worth a (re)try
+  else if(!ch.url || TV_MODE) source = 'stream';
   else if(!source) source = ch.streamOk === false ? 'link' : 'stream';
 
   stopPlayback();
@@ -592,7 +746,7 @@ function selectChannel(id, source){
   nowPlaying.style.display = 'flex';
   npAvatar.style.background = ch.color + '33';
   npAvatar.style.color = ch.color;
-  npAvatar.textContent = avatarLabel(ch);
+  setAvatar(npAvatar, ch);
   npTitle.textContent = ch.name;
   npSub.textContent = ch.group + (mode === 'radio' ? ' · רדיו לייב' : ' · שידור חי');
   if(ch.url){
@@ -611,6 +765,7 @@ function selectChannel(id, source){
   updateVolumeUI();
 
   renderList();
+  if(window.tvOnChannelChange) tvOnChannelChange(ch);
 }
 
 const streamOpt = sourceToggle.querySelector('[data-source="stream"]');
@@ -742,26 +897,24 @@ volumeIcon.addEventListener('click', () => {
 });
 
 /* ---------- ZAP ---------- */
+/* Zapping goes through the channels the list shows right now - the same
+   status / source / favorites / search filters - wrapping around. It starts
+   from the current channel's place in the full list, so it also works when
+   the playing channel itself is filtered out. Returns whether it switched. */
 function zap(step){
   const list = currentList();
-  if(list.length === 0) return;
-  let startIdx = list.findIndex(c => c.id === currentId);
-  if(startIdx === -1) startIdx = 0;
-
-  // look for the next channel with a confirmed working (green) status,
-  // skipping blocked/uncertain ones, wrapping around the list
-  let idx = startIdx;
-  for(let i = 0; i < list.length; i++){
-    idx = (idx + step + list.length) % list.length;
-    if(list[idx].status === 'ok'){
-      selectChannel(list[idx].id);
-      return;
+  const n = list.length;
+  let idx = list.findIndex(c => c.id === currentId);   // -1: nothing playing yet
+  for(let i = 0; i < n; i++){
+    idx = (idx + step + n) % n;
+    const ch = list[idx];
+    if(ch.id !== currentId && matchesFilters(ch)){
+      selectChannel(ch.id);
+      return true;
     }
   }
-
-  // no green channel found at all - fall back to plain cycling
-  idx = (startIdx + step + list.length) % list.length;
-  selectChannel(list[idx].id);
+  showToast('אין ערוצים נוספים שמתאימים לסינון הנוכחי');
+  return false;
 }
 zapPrev.addEventListener('click', () => zap(1));   // RTL: right = previous in list order
 zapNext.addEventListener('click', () => zap(-1));  // RTL: left = next
@@ -957,7 +1110,7 @@ function renderAllChannelsView(){
       avatar.className = 'ac-avatar';
       avatar.style.background = c.color + '33';
       avatar.style.color = c.color;
-      avatar.textContent = avatarLabel(c);
+      setAvatar(avatar, c);
 
       const nameEl = document.createElement('div');
       nameEl.className = 'ac-name';
@@ -1053,6 +1206,7 @@ searchMobile.addEventListener('input', e => onSearch(e.target.value));
 
 /* ---------- KEYBOARD ZAP (desktop convenience) ---------- */
 document.addEventListener('keydown', (e) => {
+  if(TV_MODE) return;   // the remote's arrows are handled by tv.js
   if(e.target.tagName === 'INPUT') return;
   if(e.key === 'ArrowLeft') zap(-1);
   if(e.key === 'ArrowRight') zap(1);

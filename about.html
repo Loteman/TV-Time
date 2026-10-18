@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>אודות - TV TIME</title>
+<meta name="theme-color" content="#0f1218">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<link rel="stylesheet" href="style.css">
+<style>
+  .about{
+    max-width:760px;
+    width:100%;
+    margin:0 auto;
+    padding:28px 20px 60px;
+    line-height:1.75;
+    font-size:15.5px;
+  }
+  .about h2{
+    display:flex;align-items:center;gap:10px;
+    font-size:21px;font-weight:900;
+    margin:36px 0 12px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--border);
+  }
+  .about h2 iconify-icon{color:var(--yellow);font-size:24px;}
+  .about h2:first-of-type{margin-top:8px;}
+  .about p{margin:0 0 12px;color:#d6dbe3;}
+  .about ul{margin:0 0 12px;padding-inline-start:22px;color:#d6dbe3;}
+  .about li{margin-bottom:8px;}
+  .about strong{color:var(--text);}
+  .about a{color:var(--yellow);}
+  .about .note{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .back-link{
+    display:inline-flex;align-items:center;gap:6px;
+    margin-bottom:18px;
+  }
+  /* in the TV app the remote's Back key returns; arrows scroll (see below) */
+  .tv-back-hint{display:none;color:var(--muted);font-size:15px;margin-bottom:18px;}
+  .tv .back-link{display:none;}
+  .tv .tv-back-hint{display:block;}
+</style>
+<script>
+  /* TV app (see TV_MODE in script.js): up/down scroll the page a good chunk
+     at a time - by default a remote press barely moves it. */
+  if(/TVTimeApp/.test(navigator.userAgent) || new URLSearchParams(location.search).has('tv')){
+    document.documentElement.classList.add('tv');
+    document.addEventListener('keydown', (e) => {
+      if(e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      e.preventDefault();
+      window.scrollBy({top: (e.key === 'ArrowDown' ? 1 : -1) * innerHeight * 0.6, behavior: 'smooth'});
+    });
+  }
+</script>
+</head>
+<body>
+
+<header>
+  <a class="brand" href="./" title="לדף הבית">
+    <iconify-icon icon="mdi:television-classic"></iconify-icon>
+    <div>
+      <h1>TV <span>TIME</span></h1>
+      <small>טלוויזיה ורדיו לייב</small>
+    </div>
+  </a>
+</header>
+
+<main class="about">
+  <a class="pill-btn back-link" href="./">
+    <iconify-icon icon="mdi:arrow-right"></iconify-icon>
+    <span>חזרה לשידורים</span>
+  </a>
+  <div class="tv-back-hint">לחצו על "חזור" בשלט כדי לחזור לשידורים · ▲▼ גלילה</div>
+
+  <h2><iconify-icon icon="mdi:information-outline"></iconify-icon>מה זה TV TIME</h2>
+  <p>TV TIME הוא אתר זפזופ לערוצי הטלוויזיה ותחנות הרדיו הישראליים ששודרים בשידור חי באינטרנט. במקום לחפש כל ערוץ באתר אחר, כל השידורים מרוכזים במקום אחד: בוחרים ערוץ, והוא מתחיל לפעול.</p>
+  <p>האתר חינמי, בלי הרשמה ובלי פרסומות משלו. הוא עובד במחשב, בנייד ובטלוויזיה (אפליקציית Android TV, עם שליטה מלאה בשלט).</p>
+
+  <h2><iconify-icon icon="mdi:play-network-outline"></iconify-icon>איך זה עובד</h2>
+  <ul>
+    <li><strong>נגן ישיר:</strong> ערוצים שהמשדר מפרסם להם שידור וידאו פתוח באינטרנט מתנגנים בנגן של האתר, עם שליטה בעוצמת הקול. הווידאו מגיע ישירות משרתי המשדר אל המכשיר שלכם.</li>
+    <li><strong>אתר המשדר:</strong> בשאר הערוצים מוצג עמוד השידור החי של המשדר עצמו, בתוך המסך, כמו שהוא: עם הנגן, המיתוג והפרסומות של המשדר.</li>
+    <li><strong>בדיקת סטטוס:</strong> בכל כניסה האתר בודק אילו ערוצים זמינים כרגע ומסמן אותם בירוק (עובד), צהוב (לא ברור) או אדום (חסום).</li>
+    <li><strong>מועדפים:</strong> נשמרים רק במכשיר שלכם, ולא נשלחים לשום מקום.</li>
+  </ul>
+
+  <h2><iconify-icon icon="mdi:copyright"></iconify-icon>זכויות יוצרים</h2>
+  <p>כל התכנים ששודרים באתר שייכים לבעלי הזכויות בהם: הערוצים, התחנות והגופים המשדרים. TV TIME בנוי כך שהוא רק מפנה אל השידורים שהם עצמם פרסמו לציבור, ולא מפר את זכויותיהם:</p>
+  <ul>
+    <li><strong>האתר לא מאחסן, לא מקליט ולא משדר מחדש שום תוכן.</strong> אין לאתר שרתי וידאו. כל שידור עובר ישירות מהשרתים של המשדר אל המכשיר של הצופה, בדיוק כמו בצפייה באתר המשדר עצמו.</li>
+    <li><strong>רק שידורים חינמיים ופומביים.</strong> כל הערוצים באתר הם שידורים שהמשדרים עצמם מציעים בחינם לכל הציבור באינטרנט, בלי מנוי, סיסמה או תשלום. אין באתר ערוצי תשלום (כמו HOT, yes או ערוצי ספורט) ואין שידורים "פיראטיים" או ממקורות לא רשמיים.</li>
+    <li><strong>אין עקיפת הגנות.</strong> האתר לא עוקף DRM, הגבלות גאוגרפיות, חסימות הטמעה או כל אמצעי הגנה אחר. משדר שבחר לחסום הטמעה של האתר שלו פשוט לא יוצג.</li>
+    <li><strong>שידור המשדר נשאר שלם.</strong> עמודי המשדרים מוצגים כמו שהם, כולל הנגן, המיתוג והפרסומות שלהם, כך שהמשדר ממשיך לקבל את הצפייה ואת ההכנסות ממנה.</li>
+    <li><strong>מקורות השידורים הישירים.</strong> כתובות הנגן הישיר הן כתובות ההפצה הרשמיות של המשדרים עצמם: אותן כתובות שהנגנים באתרים הרשמיים של המשדרים משתמשים בהן, או כפי שמתועדות בפרויקט הקוד הפתוח <a href="https://github.com/iptv-org/iptv" target="_blank" rel="noopener">iptv-org</a>, שמרכז רק שידורים שזמינים לציבור.</li>
+    <li><strong>סימני מסחר.</strong> שמות הערוצים והתחנות שייכים לבעליהם, ומופיעים באתר רק כדי לזהות את השידור. האתר לא משתמש בלוגואים של הערוצים, ואינו קשור לאף אחד מהמשדרים, אינו מטעמם ואינו ממומן על ידם.</li>
+  </ul>
+  <p><strong>בעלי זכויות:</strong> אם אתם בעלי הזכויות בשידור שמופיע באתר ואינכם מעוניינים בכך, פנו אלינו במייל <a href="mailto:lotemangames@gmail.com">lotemangames@gmail.com</a> והשידור יוסר בהקדם.</p>
+
+  <h2><iconify-icon icon="mdi:shield-account-outline"></iconify-icon>פרטיות</h2>
+  <ul>
+    <li>אין באתר חשבונות משתמש, הרשמה או עוגיות פרסום.</li>
+    <li>האתר משתמש ב-Cloudflare Web Analytics לספירת ביקורים אנונימית (כמה ביקורים ומאילו מדינות). השירות לא משתמש בעוגיות ולא מזהה מבקרים בודדים.</li>
+    <li>המועדפים ותוצאות בדיקת הסטטוס נשמרים רק בדפדפן שלכם (localStorage), ואפשר למחוק אותם בניקוי נתוני האתר.</li>
+    <li>כמו בכל אתר, השירותים שמהם נטענים חלקי האתר (גופנים, אייקונים וספריית הנגן) והמשדרים שאת השידור שלהם אתם צופים, מקבלים את כתובת ה-IP שלכם כחלק רגיל מהחיבור. אתרי המשדרים המוטמעים כפופים למדיניות הפרטיות שלהם.</li>
+  </ul>
+
+  <p class="note">המידע בעמוד זה מסביר את העקרונות שלפיהם האתר בנוי, ואינו מהווה ייעוץ משפטי.</p>
+</main>
+
+</body>
+</html>

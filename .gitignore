@@ -1,2 +1,20 @@
 # Local Claude Code / desktop-app config (dev-server launch.json, local settings)
 .claude/
+
+# The Android TV app (a WebView shell around this site). Kept out of this
+# repo: everything here is published with the website, and the app's code
+# isn't part of the site. Its only copy is local - back it up separately.
+android/
+
+# App packages and signing keys, wherever they end up - NEVER commit these
+*.apk
+*.aab
+*.idsig
+*.keystore
+*.jks
+keystore.properties
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini
