@@ -29,6 +29,39 @@ let filterSources = new Set(['stream', 'site']); // 'stream' (has a direct strea
 /* status: 'idle' | 'testing' | 'ok' | 'blocked' | 'timeout' */
 [...TV_CHANNELS, ...RADIO_CHANNELS].forEach(c => c.status = 'idle');
 
+/* The last test results are kept in localStorage, so a returning viewer sees
+   the channel statuses immediately while a fresh test runs in the background.
+   Results older than STATUS_CACHE_MAX_AGE_MS are ignored. */
+const STATUS_CACHE_KEY = 'tvtime:status';
+const STATUS_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const CACHEABLE_STATUSES = new Set(['ok', 'timeout', 'blocked']);
+
+function loadCachedStatuses(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(STATUS_CACHE_KEY));
+    if(!saved || !saved.channels || Date.now() - saved.savedAt > STATUS_CACHE_MAX_AGE_MS) return;
+    [...TV_CHANNELS, ...RADIO_CHANNELS].forEach(c => {
+      const s = saved.channels[c.id];
+      if(!s || !CACHEABLE_STATUSES.has(s.status)) return;
+      c.status = s.status;
+      if(c.stream) c.streamOk = s.streamOk;
+      if(c.url) c.linkStatus = s.linkStatus;
+    });
+  } catch(e){}   // storage blocked or corrupt - start untested
+}
+
+function saveStatuses(){
+  const channels = {};
+  [...TV_CHANNELS, ...RADIO_CHANNELS].forEach(c => {
+    if(CACHEABLE_STATUSES.has(c.status)){
+      channels[c.id] = {status: c.status, streamOk: c.streamOk, linkStatus: c.linkStatus};
+    }
+  });
+  try { localStorage.setItem(STATUS_CACHE_KEY, JSON.stringify({savedAt: Date.now(), channels})); } catch(e){}
+}
+
+loadCachedStatuses();
+
 /* ---------- ELEMENTS ---------- */
 const channelListEl = document.getElementById('channelList');
 const playerShell = document.getElementById('playerShell');
@@ -218,7 +251,16 @@ function statusLabel(s, ch){
    guaranteed on every browser, but reasonably reliable: if the frame actually
    navigates to the target's origin, reading contentWindow.location.href throws
    a cross-origin SecurityError (page works). If the frame stayed on our own
-   origin (X-Frame-Options / CSP blocked it), that read succeeds (blocked). */
+   origin (X-Frame-Options / CSP blocked it), that read succeeds (blocked).
+   Caveat: current Chromium shows a blocked or failed frame as a cross-origin
+   error page, so there the read throws too and such pages count as "ok" -
+   in practice the test mostly catches pages that don't respond in time.
+   The frame isn't left to load the whole page: it's polled, and as soon as
+   it has navigated away from our origin the answer is known and the frame
+   is removed. That keeps the test fast and light enough to run for every
+   channel at once. */
+const LINK_POLL_MS = 50;
+
 function testLink(ch, timeoutMs){
   if(!ch.url) return Promise.resolve(null);   // stream-only channel
   if(isUnverifiable(ch)) return Promise.resolve('timeout');
@@ -232,9 +274,18 @@ function testLink(ch, timeoutMs){
     const cleanup = (status) => {
       if(settled) return;
       settled = true;
+      clearInterval(poll);
+      clearTimeout(timer);
       testFrame.remove();
       resolve(status);
     };
+
+    // before the navigation commits the frame holds our own about:blank, so
+    // the read succeeds; once it's on the target's origin, the read throws
+    const poll = setInterval(() => {
+      try { testFrame.contentWindow.location.href; }
+      catch(e){ cleanup('ok'); }
+    }, LINK_POLL_MS);
 
     testFrame.onload = () => {
       try {
@@ -253,7 +304,6 @@ function testLink(ch, timeoutMs){
       testFrame.src = ch.url;
       document.body.appendChild(testFrame);
     }catch(e){
-      clearTimeout(timer);
       cleanup('timeout');
     }
   });
@@ -287,8 +337,11 @@ async function testStream(ch, timeoutMs){
 }
 
 async function testOneChannel(ch, timeoutMs){
-  ch.status = 'testing';
-  renderList();
+  // a cached result stays on screen until the fresh one replaces it
+  if(ch.status === 'idle'){
+    ch.status = 'testing';
+    renderList();
+  }
 
   const [streamOk, linkStatus] = await Promise.all([
     ch.stream ? testStream(ch, timeoutMs) : null,
@@ -301,6 +354,7 @@ async function testOneChannel(ch, timeoutMs){
   // channel whose stream is down has nothing to show.
   ch.status = streamOk ? 'ok' : (linkStatus || 'blocked');
   renderList();
+  saveStatuses();
 }
 
 const statusProgress = document.getElementById('statusProgress');
@@ -308,10 +362,12 @@ const statusProgressText = document.getElementById('statusProgressText');
 let testRunId = 0;               // a newer run (e.g. the retest button) supersedes an older one
 const testsInFlight = new Set();  // ids being tested right now, by any run
 
+/* Both checks of a channel share this budget, so a whole run takes at most
+   about this long - whatever hasn't answered by then counts as "unclear". */
+const TEST_TIMEOUT_MS = 3000;
+
 async function testChannels(list){
-  const CONCURRENCY = 3;
   const runId = ++testRunId;
-  const queue = [...list];
   let done = 0;
   const showProgress = () => {
     if(runId === testRunId) statusProgressText.textContent = `בודק סטטוס ערוצים... ${done}/${list.length}`;
@@ -319,30 +375,25 @@ async function testChannels(list){
 
   statusProgress.hidden = false;
   showProgress();
-  const workers = new Array(CONCURRENCY).fill(null).map(async () => {
-    while(queue.length && runId === testRunId){
-      // favorites jump the queue - including ones starred while the run is going
-      const favIdx = queue.findIndex(c => favorites.has(c.id));
-      const ch = queue.splice(favIdx === -1 ? 0 : favIdx, 1)[0];
-      testsInFlight.add(ch.id);
-      try {
-        await testOneChannel(ch, 6000);
-      } finally {
-        testsInFlight.delete(ch.id);
-      }
-      done++;
-      showProgress();
+  // all channels at once; favorites are started first
+  const ordered = [...list.filter(c => favorites.has(c.id)), ...list.filter(c => !favorites.has(c.id))];
+  await Promise.all(ordered.map(async ch => {
+    testsInFlight.add(ch.id);
+    try {
+      await testOneChannel(ch, TEST_TIMEOUT_MS);
+    } finally {
+      testsInFlight.delete(ch.id);
     }
-  });
-  await Promise.all(workers);
+    done++;
+    showProgress();
+  }));
   if(runId === testRunId) statusProgress.hidden = true;
 }
 
-/* Every channel, TV and radio, is tested once when the site loads; switching
-   tabs only shows results that are already there. Order: favorites first,
-   then list order - all TV channels, then all radio. Each channel is tested
-   once per run, and one that an earlier run is still testing isn't queued
-   again (its fresh result is on the way). */
+/* Every channel, TV and radio, is tested in parallel once when the site
+   loads; switching tabs only shows results that are already there. Each
+   channel is tested once per run, and one that an earlier run is still
+   testing isn't queued again (its fresh result is on the way). */
 function runAllTests(){
   testChannels([...TV_CHANNELS, ...RADIO_CHANNELS].filter(c => !testsInFlight.has(c.id)));
 }
@@ -502,6 +553,7 @@ function onStreamFailed(ch){
   updateSourceToggle();
   updateVolumeUI();
   renderList();
+  saveStatuses();
 }
 
 playerVideo.addEventListener('playing', () => {
@@ -513,6 +565,7 @@ playerVideo.addEventListener('playing', () => {
     ch.streamOk = true;
     ch.status = 'ok';
     renderList();
+    saveStatuses();
   }
 });
 
