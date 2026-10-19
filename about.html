@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>אודות - TV TIME</title>
+<title>אודות - ZapZap</title>
 <meta name="theme-color" content="#0b0e13">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -179,7 +179,7 @@
 <script>
   /* The TV app (see TV_DEVICE in script.js): up / down scroll the page a
      good chunk at a time - by default a remote press barely moves it. */
-  if(/TVTimeApp/.test(navigator.userAgent) || new URLSearchParams(location.search).has('tv')){
+  if(/ZapZapApp|TVTimeApp/.test(navigator.userAgent) || new URLSearchParams(location.search).has('tv')){
     document.documentElement.classList.add('tv');
     document.addEventListener('keydown', (e) => {
       if(e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -207,7 +207,7 @@
 
 <header class="top">
   <a class="back" href="./"><svg class="icon"><use href="#i-back"/></svg><span>חזרה לשידורים</span></a>
-  <a class="logo" href="./" title="לשידורים"><svg class="icon"><use href="#i-tv"/></svg><b>TV <span>TIME</span></b></a>
+  <a class="logo" href="./" title="לשידורים"><svg class="icon"><use href="#i-tv"/></svg><b>Zap<span>Zap</span></b></a>
 </header>
 
 <main>
@@ -215,7 +215,7 @@
   <p class="tv-hint">"חזור" בשלט - חזרה לשידורים · ▲▼ - גלילה</p>
 
   <section>
-    <h2><svg class="icon"><use href="#i-info"/></svg>מה זה TV TIME</h2>
+    <h2><svg class="icon"><use href="#i-info"/></svg>מה זה ZapZap</h2>
     <p>במקום לחפש כל ערוץ באתר אחר, כל השידורים החיים מרוכזים כאן: ערוצי טלוויזיה, תחנות הרדיו של גלי צה"ל ושל כאן, ותחנות חדשות ומוזיקה. האתר חינמי, בלי הרשמה ובלי פרסומות משלו.</p>
     <div class="devices">
       <span class="device"><svg class="icon"><use href="#i-desktop"/></svg>מחשב</span>
@@ -246,7 +246,7 @@
 
   <section>
     <h2><svg class="icon"><use href="#i-copyright"/></svg>זכויות יוצרים</h2>
-    <p>כל התכנים ששודרים באתר שייכים לבעלי הזכויות בהם: הערוצים, התחנות והגופים המשדרים. TV TIME בנוי כך שהוא רק מפנה אל השידורים שהם עצמם פרסמו לציבור, ולא מפר את זכויותיהם:</p>
+    <p>כל התכנים ששודרים באתר שייכים לבעלי הזכויות בהם: הערוצים, התחנות והגופים המשדרים. ZapZap בנוי כך שהוא רק מפנה אל השידורים שהם עצמם פרסמו לציבור, ולא מפר את זכויותיהם:</p>
     <ul>
       <li><strong>האתר לא מאחסן, לא מקליט ולא משדר מחדש שום תוכן.</strong> אין לאתר שרתי וידאו או שמע. כל שידור עובר ישירות מהשרתים של המשדר אל המכשיר של הצופה, בדיוק כמו בצפייה ובהאזנה באתר המשדר עצמו.</li>
       <li><strong>רק שידורים חינמיים ופומביים.</strong> כל הערוצים והתחנות באתר הם שידורים שהמשדרים עצמם מציעים בחינם לכל הציבור באינטרנט, בלי מנוי, סיסמה או תשלום. אין באתר ערוצי תשלום (כמו HOT, yes או ערוצי ספורט) ואין שידורים "פיראטיים" או ממקורות לא רשמיים.</li>

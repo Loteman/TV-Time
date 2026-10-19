@@ -1,4 +1,4 @@
-/* TV TIME - the site's interface, built for a TV's remote and working with
+/* ZapZap - the site's interface, built for a TV's remote and working with
    a mouse, a keyboard and touch too. Active in TV mode (TV_MODE in
    script.js: everywhere but ?old-ui, which keeps the classic view). The
    classic layout is hidden and the player fills the screen; everything
@@ -46,8 +46,8 @@
 (function(){
   if(!TV_MODE) return;
 
-  const LAST_CHANNEL_KEY = 'tvtime:lastChannel';
-  const TV_SETTINGS_KEY = 'tvtime:tvSettings';
+  const LAST_CHANNEL_KEY = 'zapzap:lastChannel';
+  const TV_SETTINGS_KEY = 'zapzap:tvSettings';
   const BROWSE_IDLE_MS = 15000;   // the browser closes after this long without a key
   const INFO_MS = 4500;           // how long the info banner stays after a channel change
   const EXIT_CONFIRM_MS = 2500;   // a second Back within this exits the app
@@ -215,8 +215,8 @@
   // over the all-channels view
   function logo(cls){
     const box = el('div', cls);
-    const name = el('b', null, 'TV ');
-    name.append(el('span', null, 'TIME'));
+    const name = el('b', null, 'Zap');
+    name.append(el('span', null, 'Zap'));
     box.append(icon('mdi:television-classic'), name);
     return box;
   }
@@ -273,7 +273,7 @@
       infoAvatar.classList.remove('avatar-long');
       infoAvatar.style.background = '';
       infoAvatar.style.color = '';
-      infoName.textContent = 'TV TIME';
+      infoName.textContent = 'ZapZap';
       infoSubText.textContent = 'בחרו ערוץ מהרשימה';
       infoStatus.hidden = true;
       liveLabel.textContent = 'שידור חי';

@@ -1,4 +1,4 @@
-/* TV TIME - the site's interface (built for a TV's remote; mouse, keyboard
+/* ZapZap - the site's interface (built for a TV's remote; mouse, keyboard
    and touch too); see tv.js. Everything here is scoped to TV mode
    (body.tv-mode, or elements tv.js only creates there), so the classic
    layout (?old-ui) is untouched. Sizes are in design pixels

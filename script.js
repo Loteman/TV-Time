@@ -2,21 +2,33 @@
 /* TV mode - the site's interface, full screen, in tv.js / tv.css: on every
    device (remote, mouse, keyboard, touch), unless the address has ?old-ui,
    which keeps the classic desktop / mobile view (the Android TV app, which
-   adds "TVTimeApp" to its user agent, always gets TV mode). index.html's
+   adds "ZapZapApp" to its user agent - "TVTimeApp" in builds from before
+   the site was renamed - always gets TV mode). index.html's
    first script decides it before anything is drawn, by marking the body. */
-const TV_APP = /TVTimeApp/.test(navigator.userAgent);
+const TV_APP = /ZapZapApp|TVTimeApp/.test(navigator.userAgent);
 const TV_MODE = document.body.classList.contains('tv-mode');
 /* The TV itself (the app, or ?tv imitating it in a browser): a remote can't
    operate a broadcaster's page, so there only direct streams are offered and
    tested. Computers and phones show broadcaster pages too. */
 const TV_DEVICE = TV_MODE && (TV_APP || new URLSearchParams(location.search).has('tv'));
 
+/* What was saved under the site's old name (TV TIME) moves to the new
+   keys - once, so nobody loses their favorites or settings. */
+try {
+  ['favorites', 'status', 'lastChannel', 'tvSettings'].forEach(key => {
+    const old = localStorage.getItem('tvtime:' + key);
+    if(old === null) return;
+    if(localStorage.getItem('zapzap:' + key) === null) localStorage.setItem('zapzap:' + key, old);
+    localStorage.removeItem('tvtime:' + key);
+  });
+} catch(e){}   // storage blocked - nothing to move
+
 let mode = 'tv';               // 'tv' | 'radio'
 let currentId = null;
 /* Favorites persist in localStorage. First-time visitors (nothing saved yet)
    start with a default set; once the viewer changes their favorites, their
    own list is kept - an empty one included. */
-const FAVORITES_KEY = 'tvtime:favorites';
+const FAVORITES_KEY = 'zapzap:favorites';
 const DEFAULT_FAVORITES = ['kan11', 'keshet12', 'reshet13', 'ch14', 'chinuchit', 'galgalatz', 'galatz'];
 
 function loadFavorites(){
@@ -44,7 +56,7 @@ let filterSources = new Set(['stream', 'site']); // 'stream' (has a direct strea
 /* The last test results are kept in localStorage, so a returning viewer sees
    the channel statuses immediately while a fresh test runs in the background.
    Results older than STATUS_CACHE_MAX_AGE_MS are ignored. */
-const STATUS_CACHE_KEY = 'tvtime:status';
+const STATUS_CACHE_KEY = 'zapzap:status';
 const STATUS_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const CACHEABLE_STATUSES = new Set(['ok', 'timeout', 'blocked']);
 

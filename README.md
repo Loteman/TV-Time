@@ -1,6 +1,6 @@
-# TV-Time
-Watch live Israeli TV channels
+# ZapZap
+Watch live Israeli TV channels and radio stations
 
-[https://tvtime.loteman.com/](https://tvtime.loteman.com/)
+[https://zapzap.loteman.com/](https://zapzap.loteman.com/)
 
 Website By Loteman
