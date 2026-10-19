@@ -1,0 +1,170 @@
+/* The site's text pages (About, Privacy), in the look of its interface
+   (tv.css): dark, the logo on top, yellow accents, rounded cards. The
+   pages carry their icons inline, like the interface, so they show whole
+   on a TV box that's still connecting. */
+:root{
+  --bg:#0b0e13;
+  --card:#161b23;
+  --card2:#1f252f;
+  --border:#2f3743;
+  --text:#eef1f6;
+  --soft:#c9d0da;
+  --muted:#8b95a3;
+  --yellow:#f0b90b;
+  --red:#e0555f;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  min-height:100vh;
+  background:radial-gradient(1200px 500px at 50% -120px, #1b2230, var(--bg) 70%) fixed, var(--bg);
+  color:var(--text);
+  font-family:'Heebo',sans-serif;
+  font-size:16px;
+  line-height:1.7;
+  -webkit-tap-highlight-color:transparent;
+}
+.icon{display:inline-block;width:1em;height:1em;flex-shrink:0;fill:currentColor;vertical-align:-.15em;}
+
+.top{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  max-width:820px;
+  margin:0 auto;
+  padding:22px 20px 10px;
+}
+.logo{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:.3px;
+  color:var(--text);
+  text-decoration:none;
+}
+.logo span,
+.logo .icon{color:var(--yellow);}
+.logo .icon{font-size:30px;}
+/* like the interface's menu buttons */
+.back{
+  position:absolute;
+  right:20px;
+  top:50%;
+  transform:translateY(-35%);
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  height:40px;
+  padding:0 16px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  color:#dfe4ea;
+  font-size:15px;
+  font-weight:700;
+  text-decoration:none;
+  transition:background-color .12s ease,color .12s ease;
+}
+.back:hover,
+.back:focus-visible{background:var(--yellow);color:#1a1500;outline:none;}
+.back .icon{font-size:19px;}
+
+main{max-width:820px;margin:0 auto;padding:6px 20px 48px;}
+.intro{
+  text-align:center;
+  color:var(--soft);
+  font-size:17px;
+  margin:6px auto 22px;
+  max-width:620px;
+}
+.tv-hint{display:none;text-align:center;color:var(--muted);font-size:15px;margin:-10px 0 20px;}
+
+section{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:20px 22px 18px;
+  margin-bottom:16px;
+}
+h2{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:0 0 12px;
+  font-size:20px;
+  font-weight:800;
+}
+h2 .icon{color:var(--yellow);font-size:24px;}
+p{margin:0 0 10px;color:var(--soft);}
+strong{color:var(--text);}
+a{color:var(--yellow);}
+ul{list-style:none;margin:0 0 10px;padding:0;}
+li{
+  position:relative;
+  margin-bottom:9px;
+  padding-inline-start:18px;
+  color:var(--soft);
+}
+li::before{
+  content:'';
+  position:absolute;
+  inset-inline-start:2px;   /* (a section in English is left to right) */
+  top:.72em;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--yellow);
+}
+
+/* the devices it works on */
+.devices{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 12px;}
+.device{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 14px;
+  border-radius:999px;
+  background:var(--card2);
+  font-size:15px;
+  font-weight:700;
+}
+.device .icon{color:var(--yellow);font-size:19px;}
+
+/* the status dots, as on the channel cards */
+.dots{display:flex;flex-wrap:wrap;gap:8px 18px;margin:2px 0 4px;}
+.dot-item{display:inline-flex;align-items:center;gap:7px;font-size:15px;color:var(--soft);}
+.dot{width:10px;height:10px;border-radius:50%;}
+.dot.none{background:transparent;border:1.5px solid var(--muted);}
+.dot.timeout{background:#e0b30b;}
+.dot.blocked{background:var(--red);}
+
+.note{
+  text-align:center;
+  color:var(--muted);
+  font-size:14px;
+  margin:22px auto 0;
+  max-width:620px;
+}
+
+@media (max-width:560px){
+  .top{flex-direction:column;gap:14px;padding-top:18px;}
+  .back{position:static;transform:none;align-self:flex-start;}
+  section{padding:18px 16px 14px;border-radius:16px;}
+  h2{font-size:18px;}
+}
+
+/* the TV app: bigger, for a screen across the room; the remote's Back
+   key returns (no back button), and up / down scroll (see below) */
+html.tv body{font-size:19px;}
+html.tv main,
+html.tv .top{max-width:1000px;}
+html.tv .back{display:none;}
+html.tv .tv-hint{display:block;}
+html.tv h2{font-size:24px;}
+html.tv .intro{font-size:20px;}
+
+/* the Privacy page: a section in each language */
+.updated{text-align:center;color:var(--muted);font-size:14px;margin:-12px 0 20px;}
+.lang-title{justify-content:center;margin:30px 0 14px;font-size:22px;font-weight:800;}
