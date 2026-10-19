@@ -56,14 +56,14 @@ const TV_CHANNELS = [
   {id:'makan33', name:'مكان 33', group:'בשפות אחרות', color:'#b08a2e', remoteNumber:33,
    url:'https://www.kan.org.il/live/?stationId=4532#',
    stream:'https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/makan/live.livx/playlist.m3u8'},
+  {id:'halatv', name:'הלא TV', group:'בשפות אחרות', color:'#dc8a4f',
+   stream:'https://stream.panet.com/edge/halaTV/playlist.m3u8'},  // not 24/7
   {id:'i24en', name:'i24News English', group:'בשפות אחרות', color:'#c94f4f', label:'EN',
    stream:'https://i24newsenglish-cdn.encoders.immergo.tv/master.m3u8'},
   {id:'i24fr', name:'i24News Français', group:'בשפות אחרות', color:'#c94f4f', label:'FR',
    stream:'https://i24newsfrench-cdn.encoders.immergo.tv/master.m3u8'},
   {id:'i24ar', name:'i24News عربي', group:'בשפות אחרות', color:'#c94f4f', label:'AR',
    stream:'https://i24newsarabic-cdn.encoders.immergo.tv/master.m3u8'},
-  {id:'halatv', name:'הלא TV', group:'בשפות אחרות', color:'#dc8a4f',
-   stream:'https://stream.panet.com/edge/halaTV/playlist.m3u8'},  // not 24/7
 ];
 
 const RADIO_CHANNELS = [
