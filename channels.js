@@ -21,7 +21,7 @@ const TV_CHANNELS = [
    url:'https://www.mako.co.il/mako-vod-live-tv/VOD-6540b8dcb64fd31006.htm?partner=headerNav'},
   {id:'reshet13', name:'רשת 13', group:'ערוצים מרכזיים', color:'#dc6f1a', remoteNumber:13,
    url:'https://reshet.tv/live/',
-   stream:'https://d2xg1g9o5vns8m.cloudfront.net/out/v1/0855d703f7d5436fae6a9c7ce8ca5075/index.m3u8'},
+   stream:'https://d198ztbnlup2iq.cloudfront.net/out/v1/850e31c0e6fa4d94a44d6ccd63e4b400/index.m3u8'},
   {id:'ch14', name:'ערוץ 14', group:'ערוצים מרכזיים', color:'#7a4fdc', remoteNumber:14,
    url:'https://www.c14.co.il/live?t=1',
    stream:'https://r.il.cdn-redge.media/livehls/oil/ch14/live/ch14/live.livx/playlist.m3u8'},
@@ -36,10 +36,10 @@ const TV_CHANNELS = [
    url:'https://video.i24news.tv/player/channel/69b17e029abd89c807678067',
    stream:'https://i24newshebrew-cdn.encoders.immergo.tv/master.m3u8'},
   {id:'hidabroot', name:'הידברות', group:'חדשות ואקטואליה', color:'#4f9ddc', remoteNumber:97,
-   stream:'https://cdn.cybercdn.live/HidabrootIL/Live97/playlist.m3u8'},
+   stream:'https://htv-live.cybercdn.live/HidabrootIL/Live97/playlist.m3u8'},
   {id:'knesset99', name:'כנסת 99', group:'חדשות ואקטואליה', color:'#6f9c4f', remoteNumber:99,
    url:'https://www.knesset.tv/live/',
-   stream:'https://contact.gostreaming.tv/Knesset/myStream/playlist.m3u8'},  // only live during sessions
+   stream:'https://kneset.gostreaming.tv/p2-kneset/_definst_/myStream/playlist.m3u8'},  // only live during sessions
 
   /* Kids */
   {id:'chinuchit', name:'כאן החינוכית', group:'ילדים', color:'#2f6fed', remoteNumber:80,
