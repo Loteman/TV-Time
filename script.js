@@ -6,6 +6,9 @@
    the site was renamed - always gets TV mode). index.html's
    first script decides it before anything is drawn, by marking the body. */
 const TV_APP = /ZapZapApp|TVTimeApp/.test(navigator.userAgent);
+/* The same app on a phone, tablet or Chromebook adds "ZapZapMobile" instead:
+   the site behaves as in a browser there, except that Back can leave it. */
+const MOBILE_APP = /ZapZapMobile/.test(navigator.userAgent);
 const TV_MODE = document.body.classList.contains('tv-mode');
 /* The TV itself (the app, or ?tv imitating it in a browser): a remote can't
    operate a broadcaster's page, so there only direct streams are offered and

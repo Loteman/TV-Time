@@ -1351,14 +1351,14 @@
     if(!p.long && browseOpen && !sheetOpen && item && item.id === p.item.id) play(p.item.ch);
   });
 
-  /* Called by the Android app for the remote's Back button (and Escape here):
+  /* Called by the Android app for Back (the remote's, or a phone's) - and Escape here:
      true when the page handled it, false to let the app exit. */
   window.tvBack = function(){
     if(sheetOpen){ closeSheet(); return true; }
     if(searching){ closeSearch(); focusMenu('search'); return true; }
     if(allMode){ closeAll(true); return true; }
-    if(browseOpen){ closeBrowse(); return true; }
-    if(!TV_APP) return true;   // a browser has nothing to exit
+    if(browseOpen && !portrait){ closeBrowse(); return true; }   // (in portrait it stays open)
+    if(!TV_APP && !MOBILE_APP) return true;   // a browser has nothing to exit
     if(Date.now() - exitArmedAt < EXIT_CONFIRM_MS) return false;
     exitArmedAt = Date.now();
     showToast('לחצו שוב על "חזור" כדי לצאת');
