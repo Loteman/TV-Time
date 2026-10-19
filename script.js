@@ -134,8 +134,17 @@ function matchesFilters(c){
   if(!filterSources.has(c.stream ? 'stream' : 'site')) return false;
   if(showFavOnly && !favorites.has(c.id)) return false;
   const term = searchTerm.trim().toLowerCase();
-  if(term && !c.name.toLowerCase().includes(term)) return false;
+  if(term && !matchesSearch(c, term)) return false;
   return true;
+}
+
+/* A search finds a channel by its name, or by its channel number (from the
+   start: "1" finds 11-16, "13" finds 13) or its avatar label (a station's
+   short name, e.g. 88). */
+function matchesSearch(c, term){
+  return c.name.toLowerCase().includes(term) ||
+         (!!c.remoteNumber && String(c.remoteNumber).startsWith(term)) ||
+         (!!c.label && c.label.toLowerCase().includes(term));
 }
 
 function emptyListMessage(list){

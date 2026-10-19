@@ -4,55 +4,181 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>אודות - TV TIME</title>
-<meta name="theme-color" content="#0f1218">
+<meta name="theme-color" content="#0b0e13">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
-  .about{
-    max-width:760px;
-    width:100%;
+  /* The About page, in the look of the site's interface (tv.css): dark,
+     the logo on top, yellow accents, rounded cards. Self-contained - icons
+     inline, like the interface's, so it shows whole on a TV box that's
+     still connecting. */
+  :root{
+    --bg:#0b0e13;
+    --card:#161b23;
+    --card2:#1f252f;
+    --border:#2f3743;
+    --text:#eef1f6;
+    --soft:#c9d0da;
+    --muted:#8b95a3;
+    --yellow:#f0b90b;
+    --red:#e0555f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:radial-gradient(1200px 500px at 50% -120px, #1b2230, var(--bg) 70%) fixed, var(--bg);
+    color:var(--text);
+    font-family:'Heebo',sans-serif;
+    font-size:16px;
+    line-height:1.7;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .icon{display:inline-block;width:1em;height:1em;flex-shrink:0;fill:currentColor;vertical-align:-.15em;}
+
+  .top{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    max-width:820px;
     margin:0 auto;
-    padding:28px 20px 60px;
-    line-height:1.75;
-    font-size:15.5px;
+    padding:22px 20px 10px;
   }
-  .about h2{
-    display:flex;align-items:center;gap:10px;
-    font-size:21px;font-weight:900;
-    margin:36px 0 12px;
-    padding-bottom:10px;
-    border-bottom:1px solid var(--border);
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:26px;
+    font-weight:900;
+    letter-spacing:.3px;
+    color:var(--text);
+    text-decoration:none;
   }
-  .about h2 iconify-icon{color:var(--yellow);font-size:24px;}
-  .about h2:first-of-type{margin-top:8px;}
-  .about p{margin:0 0 12px;color:#d6dbe3;}
-  .about ul{margin:0 0 12px;padding-inline-start:22px;color:#d6dbe3;}
-  .about li{margin-bottom:8px;}
-  .about strong{color:var(--text);}
-  .about a{color:var(--yellow);}
-  .about .note{
-    background:var(--surface);
+  .logo span,
+  .logo .icon{color:var(--yellow);}
+  .logo .icon{font-size:30px;}
+  /* like the interface's menu buttons */
+  .back{
+    position:absolute;
+    right:20px;
+    top:50%;
+    transform:translateY(-35%);
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    height:40px;
+    padding:0 16px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    color:#dfe4ea;
+    font-size:15px;
+    font-weight:700;
+    text-decoration:none;
+    transition:background-color .12s ease,color .12s ease;
+  }
+  .back:hover,
+  .back:focus-visible{background:var(--yellow);color:#1a1500;outline:none;}
+  .back .icon{font-size:19px;}
+
+  main{max-width:820px;margin:0 auto;padding:6px 20px 48px;}
+  .intro{
+    text-align:center;
+    color:var(--soft);
+    font-size:17px;
+    margin:6px auto 22px;
+    max-width:620px;
+  }
+  .tv-hint{display:none;text-align:center;color:var(--muted);font-size:15px;margin:-10px 0 20px;}
+
+  section{
+    background:var(--card);
     border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:14px 16px;
+    border-radius:18px;
+    padding:20px 22px 18px;
+    margin-bottom:16px;
+  }
+  h2{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0 0 12px;
+    font-size:20px;
+    font-weight:800;
+  }
+  h2 .icon{color:var(--yellow);font-size:24px;}
+  p{margin:0 0 10px;color:var(--soft);}
+  strong{color:var(--text);}
+  a{color:var(--yellow);}
+  ul{list-style:none;margin:0 0 10px;padding:0;}
+  li{
+    position:relative;
+    margin-bottom:9px;
+    padding-inline-start:18px;
+    color:var(--soft);
+  }
+  li::before{
+    content:'';
+    position:absolute;
+    right:2px;
+    top:.72em;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--yellow);
+  }
+
+  /* the devices it works on */
+  .devices{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 12px;}
+  .device{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 14px;
+    border-radius:999px;
+    background:var(--card2);
+    font-size:15px;
+    font-weight:700;
+  }
+  .device .icon{color:var(--yellow);font-size:19px;}
+
+  /* the status dots, as on the channel cards */
+  .dots{display:flex;flex-wrap:wrap;gap:8px 18px;margin:2px 0 4px;}
+  .dot-item{display:inline-flex;align-items:center;gap:7px;font-size:15px;color:var(--soft);}
+  .dot{width:10px;height:10px;border-radius:50%;}
+  .dot.none{background:transparent;border:1.5px solid var(--muted);}
+  .dot.timeout{background:#e0b30b;}
+  .dot.blocked{background:var(--red);}
+
+  .note{
+    text-align:center;
     color:var(--muted);
     font-size:14px;
+    margin:22px auto 0;
+    max-width:620px;
   }
-  .back-link{
-    display:inline-flex;align-items:center;gap:6px;
-    margin-bottom:18px;
+
+  @media (max-width:560px){
+    .top{flex-direction:column;gap:14px;padding-top:18px;}
+    .back{position:static;transform:none;align-self:flex-start;}
+    section{padding:18px 16px 14px;border-radius:16px;}
+    h2{font-size:18px;}
   }
-  /* in the TV app the remote's Back key returns; arrows scroll (see below) */
-  .tv-back-hint{display:none;color:var(--muted);font-size:15px;margin-bottom:18px;}
-  .tv .back-link{display:none;}
-  .tv .tv-back-hint{display:block;}
+
+  /* the TV app: bigger, for a screen across the room; the remote's Back
+     key returns (no back button), and up / down scroll (see below) */
+  html.tv body{font-size:19px;}
+  html.tv main,
+  html.tv .top{max-width:1000px;}
+  html.tv .back{display:none;}
+  html.tv .tv-hint{display:block;}
+  html.tv h2{font-size:24px;}
+  html.tv .intro{font-size:20px;}
 </style>
 <script>
-  /* TV app (see TV_MODE in script.js): up/down scroll the page a good chunk
-     at a time - by default a remote press barely moves it. */
+  /* The TV app (see TV_DEVICE in script.js): up / down scroll the page a
+     good chunk at a time - by default a remote press barely moves it. */
   if(/TVTimeApp/.test(navigator.userAgent) || new URLSearchParams(location.search).has('tv')){
     document.documentElement.classList.add('tv');
     document.addEventListener('keydown', (e) => {
@@ -65,54 +191,87 @@
 </head>
 <body>
 
-<header>
-  <a class="brand" href="./" title="לדף הבית">
-    <iconify-icon icon="mdi:television-classic"></iconify-icon>
-    <div>
-      <h1>TV <span>TIME</span></h1>
-      <small>טלוויזיה ורדיו לייב</small>
-    </div>
-  </a>
+<!-- Material Design Icons (Apache-2.0), as in the interface -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-tv" viewBox="0 0 24 24"><path d="M8.16 3L6.75 4.41L9.34 7H4c-1.11 0-2 .89-2 2v10c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V9c0-1.11-.89-2-2-2h-5.34l2.59-2.59L15.84 3L12 6.84zM4 9h13v10H4zm15.5 0a1 1 0 0 1 1 1a1 1 0 0 1-1 1a1 1 0 0 1-1-1a1 1 0 0 1 1-1m0 3a1 1 0 0 1 1 1a1 1 0 0 1-1 1a1 1 0 0 1-1-1a1 1 0 0 1 1-1"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5l1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5L16 11z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><path d="M11 9h2V7h-2m1 13c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8m0-18A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m-1 15h2v-6h-2z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M10 16.5l6-4.5l-6-4.5M12 20c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8m0-18A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2L9.19 8.62L2 9.24l5.45 4.73L5.82 21z"/></symbol>
+  <symbol id="i-copyright" viewBox="0 0 24 24"><path d="M10.08 10.86c.05-.33.16-.62.3-.87s.34-.46.59-.62c.24-.15.54-.22.91-.23c.23.01.44.05.63.13c.2.09.38.21.52.36s.25.33.34.53s.13.42.14.64h1.79c-.02-.47-.11-.9-.28-1.29s-.4-.73-.7-1.01s-.66-.5-1.08-.66s-.88-.23-1.39-.23c-.65 0-1.22.11-1.7.34s-.88.53-1.2.92s-.56.84-.71 1.36S8 11.29 8 11.87v.27c0 .58.08 1.12.23 1.64s.39.97.71 1.35s.72.69 1.2.91s1.05.34 1.7.34c.47 0 .91-.08 1.32-.23s.77-.36 1.08-.63s.56-.58.74-.94s.29-.74.3-1.15h-1.79c-.01.21-.06.4-.15.58s-.21.33-.36.46s-.32.23-.52.3c-.19.07-.39.09-.6.1c-.36-.01-.66-.08-.89-.23c-.25-.16-.45-.37-.59-.62s-.25-.55-.3-.88s-.08-.67-.08-1v-.27c0-.35.03-.68.08-1.01M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M21 11c0 5.55-3.84 10.74-9 12c-5.16-1.26-9-6.45-9-12V5l9-4l9 4zm-9 10c3.75-1 7-5.46 7-9.78V6.3l-7-3.12L5 6.3v4.92C5 15.54 8.25 20 12 21m-2-4l-4-4l1.41-1.41L10 14.17l6.59-6.59L18 9"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><path d="M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2zm-2 0l-8 5l-8-5zm0 12H4V8l8 5l8-5z"/></symbol>
+  <symbol id="i-desktop" viewBox="0 0 24 24"><path d="M21 16H3V4h18m0-2H3c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h7v2H8v2h8v-2h-2v-2h7a2 2 0 0 0 2-2V4c0-1.11-.9-2-2-2"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M17 19H7V5h10m0-4H7c-1.11 0-2 .89-2 2v18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2"/></symbol>
+</svg>
+
+<header class="top">
+  <a class="back" href="./"><svg class="icon"><use href="#i-back"/></svg><span>חזרה לשידורים</span></a>
+  <a class="logo" href="./" title="לשידורים"><svg class="icon"><use href="#i-tv"/></svg><b>TV <span>TIME</span></b></a>
 </header>
 
-<main class="about">
-  <a class="pill-btn back-link" href="./">
-    <iconify-icon icon="mdi:arrow-right"></iconify-icon>
-    <span>חזרה לשידורים</span>
-  </a>
-  <div class="tv-back-hint">לחצו על "חזור" בשלט כדי לחזור לשידורים · ▲▼ גלילה</div>
+<main>
+  <p class="intro">כל ערוצי הטלוויזיה ותחנות הרדיו הישראליים ששודרים בשידור חי, במקום אחד. בוחרים ערוץ, והוא מתחיל לפעול.</p>
+  <p class="tv-hint">"חזור" בשלט - חזרה לשידורים · ▲▼ - גלילה</p>
 
-  <h2><iconify-icon icon="mdi:information-outline"></iconify-icon>מה זה TV TIME</h2>
-  <p>TV TIME הוא אתר זפזופ לערוצי הטלוויזיה ותחנות הרדיו הישראליים ששודרים בשידור חי באינטרנט. במקום לחפש כל ערוץ באתר אחר, כל השידורים מרוכזים במקום אחד: בוחרים ערוץ, והוא מתחיל לפעול.</p>
-  <p>האתר חינמי, בלי הרשמה ובלי פרסומות משלו. הוא עובד במחשב, בנייד ובטלוויזיה (אפליקציית Android TV, עם שליטה מלאה בשלט).</p>
+  <section>
+    <h2><svg class="icon"><use href="#i-info"/></svg>מה זה TV TIME</h2>
+    <p>במקום לחפש כל ערוץ באתר אחר, כל השידורים החיים מרוכזים כאן: ערוצי טלוויזיה, תחנות הרדיו של גלי צה"ל ושל כאן, ותחנות חדשות ומוזיקה. האתר חינמי, בלי הרשמה ובלי פרסומות משלו.</p>
+    <div class="devices">
+      <span class="device"><svg class="icon"><use href="#i-desktop"/></svg>מחשב</span>
+      <span class="device"><svg class="icon"><use href="#i-phone"/></svg>טלפון וטאבלט</span>
+      <span class="device"><svg class="icon"><use href="#i-tv"/></svg>טלוויזיה (Android TV, עם שלט)</span>
+    </div>
+    <ul>
+      <li><strong>זפזופ:</strong> מעבר לערוץ הבא או הקודם בחיצים, בהחלקה או בשלט - כמו בטלוויזיה.</li>
+      <li><strong>מועדפים:</strong> שורה משלכם בראש הרשימה, ואפשר לזפזפ רק ביניהם.</li>
+      <li><strong>כל הערוצים וחיפוש:</strong> כל הרשימה על המסך כולו, וחיפוש לפי שם, מספר אפיק או תדר.</li>
+    </ul>
+    <p>איך משתמשים בכל מכשיר - בהגדרות, תחת "איך משתמשים".</p>
+  </section>
 
-  <h2><iconify-icon icon="mdi:play-network-outline"></iconify-icon>איך זה עובד</h2>
-  <ul>
-    <li><strong>נגן ישיר:</strong> ערוצים שהמשדר מפרסם להם שידור וידאו פתוח באינטרנט מתנגנים בנגן של האתר, עם שליטה בעוצמת הקול. הווידאו מגיע ישירות משרתי המשדר אל המכשיר שלכם.</li>
-    <li><strong>אתר המשדר:</strong> בשאר הערוצים מוצג עמוד השידור החי של המשדר עצמו, בתוך המסך, כמו שהוא: עם הנגן, המיתוג והפרסומות של המשדר.</li>
-    <li><strong>בדיקת סטטוס:</strong> בכל כניסה האתר בודק אילו ערוצים זמינים כרגע ומסמן אותם בירוק (עובד), צהוב (לא ברור) או אדום (חסום).</li>
-    <li><strong>מועדפים:</strong> נשמרים רק במכשיר שלכם, ולא נשלחים לשום מקום.</li>
-  </ul>
+  <section>
+    <h2><svg class="icon"><use href="#i-play"/></svg>איך זה עובד</h2>
+    <ul>
+      <li><strong>נגן ישיר:</strong> ערוצים ותחנות שהמשדר מפרסם להם שידור פתוח באינטרנט מתנגנים בנגן של האתר, עם שליטה בעוצמת הקול. השידור מגיע ישירות משרתי המשדר אל המכשיר שלכם.</li>
+      <li><strong>אתר המשדר:</strong> בערוצים בלי שידור כזה מוצג עמוד השידור החי של המשדר עצמו, כמו שהוא - עם הנגן, המיתוג והפרסומות שלו. (בטלוויזיה מוצגים רק ערוצים בנגן ישיר, כי בדף אינטרנט אי אפשר לשלוט בשלט.)</li>
+      <li><strong>בדיקת זמינות:</strong> בכל כניסה האתר בודק אילו ערוצים זמינים כרגע. על כרטיס הערוץ:</li>
+    </ul>
+    <div class="dots">
+      <span class="dot-item"><span class="dot none"></span>בלי נקודה - עובד</span>
+      <span class="dot-item"><span class="dot timeout"></span>צהוב - לא ברור</span>
+      <span class="dot-item"><span class="dot blocked"></span>אדום - חסום</span>
+    </div>
+  </section>
 
-  <h2><iconify-icon icon="mdi:copyright"></iconify-icon>זכויות יוצרים</h2>
-  <p>כל התכנים ששודרים באתר שייכים לבעלי הזכויות בהם: הערוצים, התחנות והגופים המשדרים. TV TIME בנוי כך שהוא רק מפנה אל השידורים שהם עצמם פרסמו לציבור, ולא מפר את זכויותיהם:</p>
-  <ul>
-    <li><strong>האתר לא מאחסן, לא מקליט ולא משדר מחדש שום תוכן.</strong> אין לאתר שרתי וידאו. כל שידור עובר ישירות מהשרתים של המשדר אל המכשיר של הצופה, בדיוק כמו בצפייה באתר המשדר עצמו.</li>
-    <li><strong>רק שידורים חינמיים ופומביים.</strong> כל הערוצים באתר הם שידורים שהמשדרים עצמם מציעים בחינם לכל הציבור באינטרנט, בלי מנוי, סיסמה או תשלום. אין באתר ערוצי תשלום (כמו HOT, yes או ערוצי ספורט) ואין שידורים "פיראטיים" או ממקורות לא רשמיים.</li>
-    <li><strong>אין עקיפת הגנות.</strong> האתר לא עוקף DRM, הגבלות גאוגרפיות, חסימות הטמעה או כל אמצעי הגנה אחר. משדר שבחר לחסום הטמעה של האתר שלו פשוט לא יוצג.</li>
-    <li><strong>שידור המשדר נשאר שלם.</strong> עמודי המשדרים מוצגים כמו שהם, כולל הנגן, המיתוג והפרסומות שלהם, כך שהמשדר ממשיך לקבל את הצפייה ואת ההכנסות ממנה.</li>
-    <li><strong>מקורות השידורים הישירים.</strong> כתובות הנגן הישיר הן כתובות ההפצה הרשמיות של המשדרים עצמם: אותן כתובות שהנגנים באתרים הרשמיים של המשדרים משתמשים בהן, או כפי שמתועדות בפרויקט הקוד הפתוח <a href="https://github.com/iptv-org/iptv" target="_blank" rel="noopener">iptv-org</a>, שמרכז רק שידורים שזמינים לציבור.</li>
-    <li><strong>סימני מסחר.</strong> שמות הערוצים והתחנות שייכים לבעליהם, ומופיעים באתר רק כדי לזהות את השידור. האתר לא משתמש בלוגואים של הערוצים, ואינו קשור לאף אחד מהמשדרים, אינו מטעמם ואינו ממומן על ידם.</li>
-  </ul>
-  <p><strong>בעלי זכויות:</strong> אם אתם בעלי הזכויות בשידור שמופיע באתר ואינכם מעוניינים בכך, פנו אלינו במייל <a href="mailto:lotemangames@gmail.com">lotemangames@gmail.com</a> והשידור יוסר בהקדם.</p>
+  <section>
+    <h2><svg class="icon"><use href="#i-copyright"/></svg>זכויות יוצרים</h2>
+    <p>כל התכנים ששודרים באתר שייכים לבעלי הזכויות בהם: הערוצים, התחנות והגופים המשדרים. TV TIME בנוי כך שהוא רק מפנה אל השידורים שהם עצמם פרסמו לציבור, ולא מפר את זכויותיהם:</p>
+    <ul>
+      <li><strong>האתר לא מאחסן, לא מקליט ולא משדר מחדש שום תוכן.</strong> אין לאתר שרתי וידאו או שמע. כל שידור עובר ישירות מהשרתים של המשדר אל המכשיר של הצופה, בדיוק כמו בצפייה ובהאזנה באתר המשדר עצמו.</li>
+      <li><strong>רק שידורים חינמיים ופומביים.</strong> כל הערוצים והתחנות באתר הם שידורים שהמשדרים עצמם מציעים בחינם לכל הציבור באינטרנט, בלי מנוי, סיסמה או תשלום. אין באתר ערוצי תשלום (כמו HOT, yes או ערוצי ספורט) ואין שידורים "פיראטיים" או ממקורות לא רשמיים.</li>
+      <li><strong>אין עקיפת הגנות.</strong> האתר לא עוקף DRM, הגבלות גאוגרפיות, חסימות הטמעה או כל אמצעי הגנה אחר. משדר שבחר לחסום הטמעה של האתר שלו פשוט לא יוצג.</li>
+      <li><strong>שידור המשדר נשאר שלם.</strong> עמודי המשדרים מוצגים כמו שהם, כולל הנגן, המיתוג והפרסומות שלהם, כך שהמשדר ממשיך לקבל את הצפייה ואת ההכנסות ממנה.</li>
+      <li><strong>מקורות השידורים הישירים.</strong> כתובות הנגן הישיר הן כתובות ההפצה הרשמיות של המשדרים עצמם: אותן כתובות שהנגנים באתרים הרשמיים של הערוצים והתחנות משתמשים בהן, או כפי שמתועדות בפרויקט הקוד הפתוח <a href="https://github.com/iptv-org/iptv" target="_blank" rel="noopener">iptv-org</a>, שמרכז רק שידורים שזמינים לציבור.</li>
+      <li><strong>סימני מסחר.</strong> שמות הערוצים והתחנות שייכים לבעליהם, ומופיעים באתר רק כדי לזהות את השידור. האתר לא משתמש בלוגואים של הערוצים, ואינו קשור לאף אחד מהמשדרים, אינו מטעמם ואינו ממומן על ידם.</li>
+    </ul>
+    <p><strong>בעלי זכויות:</strong> אם אתם בעלי הזכויות בשידור שמופיע באתר ואינכם מעוניינים בכך, פנו אלינו במייל <a href="mailto:lotemangames@gmail.com">lotemangames@gmail.com</a> והשידור יוסר בהקדם.</p>
+  </section>
 
-  <h2><iconify-icon icon="mdi:shield-account-outline"></iconify-icon>פרטיות</h2>
-  <ul>
-    <li>אין באתר חשבונות משתמש, הרשמה או עוגיות פרסום.</li>
-    <li>האתר משתמש ב-Cloudflare Web Analytics לספירת ביקורים אנונימית (כמה ביקורים ומאילו מדינות). השירות לא משתמש בעוגיות ולא מזהה מבקרים בודדים.</li>
-    <li>המועדפים ותוצאות בדיקת הסטטוס נשמרים רק בדפדפן שלכם (localStorage), ואפשר למחוק אותם בניקוי נתוני האתר.</li>
-    <li>כמו בכל אתר, השירותים שמהם נטענים חלקי האתר (גופנים, אייקונים וספריית הנגן) והמשדרים שאת השידור שלהם אתם צופים, מקבלים את כתובת ה-IP שלכם כחלק רגיל מהחיבור. אתרי המשדרים המוטמעים כפופים למדיניות הפרטיות שלהם.</li>
-  </ul>
+  <section>
+    <h2><svg class="icon"><use href="#i-shield"/></svg>פרטיות</h2>
+    <ul>
+      <li>אין באתר חשבונות משתמש, הרשמה או עוגיות פרסום.</li>
+      <li>האתר משתמש ב-Cloudflare Web Analytics לספירת ביקורים אנונימית (כמה ביקורים ומאילו מדינות). השירות לא משתמש בעוגיות ולא מזהה מבקרים בודדים.</li>
+      <li>המועדפים, ההגדרות ותוצאות בדיקת הזמינות נשמרים רק בדפדפן שלכם (localStorage), ואפשר למחוק אותם בניקוי נתוני האתר.</li>
+      <li>כמו בכל אתר, השירותים שמהם נטענים חלקי האתר (גופנים וספריית הנגן) והמשדרים שאת השידור שלהם אתם צופים או שומעים, מקבלים את כתובת ה-IP שלכם כחלק רגיל מהחיבור. אתרי המשדרים המוטמעים כפופים למדיניות הפרטיות שלהם.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><svg class="icon"><use href="#i-mail"/></svg>יצירת קשר</h2>
+    <p>שאלות, הצעות לערוצים ותחנות, או דיווח על שידור שלא עובד: <a href="mailto:lotemangames@gmail.com">lotemangames@gmail.com</a></p>
+  </section>
 
   <p class="note">המידע בעמוד זה מסביר את העקרונות שלפיהם האתר בנוי, ואינו מהווה ייעוץ משפטי.</p>
 </main>

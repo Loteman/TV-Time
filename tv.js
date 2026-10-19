@@ -502,9 +502,15 @@
      row's far end is pushed past its edge when they don't fit. */
   function fitMenu(){
     if(searching) return;   // (the buttons are hidden behind the search field)
-    menuEl.classList.remove('tv-menu-tight');
+    menuEl.classList.remove('tv-menu-tight', 'tv-menu-close');
     const edge = menuEl.getBoundingClientRect().left + (parseFloat(getComputedStyle(menuEl).paddingLeft) || 0);
     if(portrait || mediaGroup.getBoundingClientRect().left < edge - 1) menuEl.classList.add('tv-menu-tight');
+    // the two groups a button's width apart or less: a thin line between
+    // them, so they still read as two (RTL: the first group is on the right)
+    const firstGroup = [...menuEl.children].filter(e => e !== mediaGroup && e.offsetParent && e.classList.contains('tv-btn'));
+    if(!firstGroup.length) return;
+    const gap = Math.min(...firstGroup.map(e => e.getBoundingClientRect().left)) - mediaGroup.getBoundingClientRect().right;
+    if(gap <= 40 * unit()) menuEl.classList.add('tv-menu-close');
   }
 
   /* Search (not on the TV itself): the menu row turns into a search field,
@@ -720,7 +726,8 @@
     setShift(row, row.shift + step * rowView(row) * 0.8);
   }
 
-  function focusAt(r, c){
+  // toTop: a menu shortcut's jump - the row goes to the top of the view
+  function focusAt(r, c, toTop){
     r = clamp(r, 0, rows.length - 1);
     const row = rows[r];
     if(!row.items.length) return;
@@ -729,13 +736,13 @@
     row.col = c;
     const item = row.items[c];
     setFocus(item.el);
-    alignRows();
+    alignRows(toTop);
     if(row.strip) scrollRowTo(row, item.el);
   }
 
   // the focused channel row lines up at the top of the rows view; on the
   // menu, the first channel row does
-  function alignRows(){
+  function alignRows(toTop){
     const lineUp = pos.r === 0 ? rows[1] : rows[pos.r];
     if(!nativeList()){
       rowsStrip.style.transform = lineUp ? `translateY(${-lineUp.el.offsetTop}px)` : '';
@@ -744,10 +751,23 @@
     if(!lineUp) return;
     const top = pos.r === 0 ? 0 : lineUp.el.offsetTop;
     const bottom = lineUp.el.offsetTop + lineUp.el.offsetHeight;
-    // portrait shows several rows, so the row only has to be in view
-    if(!portrait && !allMode) rowsView.scrollTop = top;
+    // portrait and the all-channels view show several rows, so moving
+    // between them only has to keep the row in view - a jump brings it to
+    // the top, where it's easy to spot
+    if(toTop) scrollListTo(top);
+    else if(!portrait && !allMode) rowsView.scrollTop = top;
     else if(top < rowsView.scrollTop) rowsView.scrollTop = top;
     else if(bottom > rowsView.scrollTop + rowsView.clientHeight) rowsView.scrollTop = bottom - rowsView.clientHeight;
+  }
+
+  /* Scrolls the list of rows so this point is at its top - with room added
+     under the last rows if needed, so one near the end can come up too
+     (until the list is laid out again). */
+  function scrollListTo(top){
+    const pad = parseFloat(rowsStrip.style.paddingBottom) || 0;
+    const content = rowsStrip.offsetHeight - pad;
+    rowsStrip.style.paddingBottom = Math.max(0, top + rowsView.clientHeight - content) + 'px';
+    rowsView.scrollTo({top, behavior: rowsView.closest('.tv-no-anim') ? 'auto' : 'smooth'});
   }
 
   // after a resize or rotation, or a switch to / from touch (another way of
@@ -755,6 +775,7 @@
   function relayout(){
     withoutAnimation(() => {
       rowsStrip.style.transform = '';
+      rowsStrip.style.paddingBottom = '';
       rows.forEach(row => {
         if(!row.strip) return;
         row.strip.style.transform = '';
@@ -782,7 +803,7 @@
   function jumpTo(test, emptyMessage){
     const r = rows.findIndex((row, i) => i > 0 && test(row));
     if(r === -1){ if(emptyMessage) showToast(emptyMessage); return; }
-    focusAt(r, rows[r].col);
+    focusAt(r, rows[r].col, true);
   }
 
   function focusPlaying(){

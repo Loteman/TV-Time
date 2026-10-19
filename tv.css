@@ -262,6 +262,15 @@ body:not(.tv-touch) .tv-btn.tv-focus{background:var(--yellow);color:#1a1500;tran
 /* no room for the labels (always in portrait): every button just its icon */
 .tv-menu.tv-menu-tight .tv-btn{flex-shrink:0;width:calc(40 * var(--u));padding:0;justify-content:center;}
 .tv-menu.tv-menu-tight .tv-btn span{display:none;}
+/* the two groups close together: a thin line marks where the second starts */
+.tv-menu.tv-menu-close .tv-menu-media::before{
+  content:'';
+  align-self:center;
+  width:calc(1 * var(--u));
+  min-width:1px;
+  height:calc(26 * var(--u));
+  background:rgba(255,255,255,.22);
+}
 
 .tv-rows{height:calc(204 * var(--u));overflow:hidden;}
 .tv-rows-strip{position:relative;transition:transform .25s ease;}
