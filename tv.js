@@ -1383,6 +1383,20 @@
     if(id === currentId) selectChannel(id, source);
   };
 
+  /* The app on a phone or tablet keeps a radio station playing in the
+     background (with a notification and lock screen controls), so it's told
+     what plays whenever that changes. */
+  function reportNowPlaying(){
+    if(!window.ZapZapAndroid) return;
+    const station = RADIO_CHANNELS.find(c => c.id === currentId);
+    const radio = !!station && currentSource === 'stream';
+    try {
+      ZapZapAndroid.nowPlaying(radio, radio && !playerVideo.paused,
+                               station ? station.name : '', station ? station.group : '');
+    } catch(e){}
+  }
+  ['playing', 'pause', 'emptied'].forEach(type => playerVideo.addEventListener(type, reportNowPlaying));
+
   /* ---------- MOUSE AND TOUCH ---------- */
   /* What was used last decides the hints (tv.css: body.tv-pointer hides
      them, body.tv-touch shows the touch ones), how long the browser stays,
