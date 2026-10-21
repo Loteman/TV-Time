@@ -21,3 +21,8 @@ if(new URLSearchParams(location.search).has('old-ui')){
     });
   });
 }
+
+// the footer's copyright year
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.year').forEach(el => { el.textContent = new Date().getFullYear(); });
+});

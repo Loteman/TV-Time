@@ -1,0 +1,24 @@
+# Cloudflare Pages response headers (this file isn't served itself).
+
+# Security headers for every response. No X-Frame-Options DENY: the site
+# embeds broadcaster pages, but nothing embeds it - SAMEORIGIN is enough.
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Pages always revalidate, so a phone or the app never mixes a new page with
+# old cached files. CSS and JS get ?v=N in the pages' links: bump N when a
+# file changes (Cloudflare keeps them in browsers for hours otherwise).
+/
+  Cache-Control: no-cache
+/*.html
+  Cache-Control: no-cache
+/about
+  Cache-Control: no-cache
+/privacy
+  Cache-Control: no-cache
+/accessibility
+  Cache-Control: no-cache

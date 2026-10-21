@@ -850,3 +850,19 @@ header{
 @media(max-width:700px){
   .radio-art-avatar.avatar-long{font-size:15px;}
 }
+
+/* ---------- ABOUT THE SITE (static text, in index.html) ---------- */
+/* Shown under the classic view; the full-screen interface (tv.css) hides it. */
+.site-intro{
+  max-width:900px;
+  margin:28px auto 0;
+  padding:0 20px 30px;
+  color:var(--muted);
+  font-size:15px;
+  line-height:1.7;
+}
+.site-intro h2{color:var(--text);font-size:20px;margin:0 0 8px;}
+.site-intro h3{color:var(--text);font-size:16px;margin:16px 0 4px;}
+.site-intro p{margin:0 0 8px;}
+.site-intro .site-footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--border);text-align:center;font-size:14px;}
+.site-intro a{color:var(--text);}

@@ -929,3 +929,15 @@ body.tv-all .tv-rows::-webkit-scrollbar{display:none;}
 body.tv-all:not(.tv-touch) .tv-rows{scroll-behavior:smooth;}
 /* the button while its view is up */
 .tv-btn.on{box-shadow:inset 0 0 0 calc(2 * var(--u)) var(--yellow);color:var(--yellow);}
+
+/* Less motion for those who asked for it in their system settings: no
+   sliding rows, browser or equalizer, just the end state. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important;}
+}
+
+/* the static text about the site (index.html) is for the classic view and
+   search engines - the full-screen interface covers the whole page */
+body.tv-mode .site-intro{display:none;}
+/* pinch zoom is allowed (accessibility), a double tap doesn't zoom by accident */
+body.tv-mode{touch-action:manipulation;}
