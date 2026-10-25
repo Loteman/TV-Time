@@ -614,6 +614,7 @@ function applyBrightness(){
 
 function stopPlayback(){
   loadSeq++;
+  cancelRecovery();
   currentSource = null;
   clearTimeout(streamStartTimer);
   clearTimeout(overlayTimer);
@@ -707,12 +708,11 @@ function showPlayerMessage(text, icon){
 
 /* The stream didn't start or died: fall back to the broadcaster's page, or -
    for a stream-only channel, and always on the TV itself, which never shows
-   broadcaster pages - say it's unavailable right now. In the TV interface a
-   failed start first gets one automatic retry: a TV box that just woke up
-   may still be connecting. */
-const STREAM_RETRY_DELAY_MS = 2000;
+   broadcaster pages - say it's unavailable right now. Either way the stream
+   keeps being tried (startRecovery) while the channel stays on. */
 
 function onStreamFailed(ch){
+  const wasPlaying = streamPlayedSeq === loadSeq;   // it played, then dropped
   ch.streamOk = false;
   ch.status = ch.url ? (ch.linkStatus || 'timeout') : 'blocked';
   stopPlayback();
@@ -720,15 +720,12 @@ function onStreamFailed(ch){
     loadingOverlay.classList.remove('hide');
     startLink(ch);
     showToast('השידור הישיר לא זמין כרגע - עברנו לאתר המשדר');
-  } else if(TV_MODE && !ch.retriedStream){
-    ch.retriedStream = true;
-    setTimeout(() => {
-      if(currentId === ch.id && !currentSource) selectChannel(ch.id, 'stream');
-    }, STREAM_RETRY_DELAY_MS);
   } else {
     loadingOverlay.classList.add('hide');
-    showPlayerMessage('השידור של הערוץ הזה לא זמין כרגע', 'mdi:television-off');
+    showPlayerMessage(wasPlaying ? 'השידור נפל - מנסים להתחבר שוב…' : 'השידור של הערוץ הזה לא זמין כרגע - מנסים שוב…',
+                      'mdi:television-off');
   }
+  startRecovery(ch);
   updateSourceToggle();
   updateVolumeUI();
   renderList();
@@ -742,17 +739,133 @@ function onStreamFailed(ch){
 
 playerVideo.addEventListener('playing', () => {
   if(currentSource !== 'stream') return;
+  streamPlayedSeq = loadSeq;
+  lastProgressAt = Date.now();
   clearTimeout(streamStartTimer);
   loadingOverlay.classList.add('hide');
   radioArt.classList.remove('paused');
   const ch = findChannel(currentId);
-  if(ch) ch.retriedStream = false;   // a later failure gets its own automatic retry
   if(ch && !ch.streamOk){
     ch.streamOk = true;
     ch.status = 'ok';
     renderList();
     saveStatuses();
   }
+});
+
+/* ---------- RECOVERY ----------
+   A stream that dropped (or never started) is tried again while its channel
+   stays on: after 2 seconds, after 30, then every minute for 5 more minutes.
+   Each try is a quick check of the stream (testStream) rather than a reload,
+   so nothing flickers; when it answers, the channel plays again by itself -
+   also over the broadcaster's page that replaced it on a computer or phone.
+   Choosing any channel or source cancels it (stopPlayback). */
+const RECOVERY_DELAYS_MS = [2000, 30000, 60000, 60000, 60000, 60000, 60000];
+let recovery = null;   // {id, attempt, timer}
+
+function startRecovery(ch){
+  recovery = {id: ch.id, attempt: 0, timer: null};
+  scheduleRecovery();
+}
+
+function scheduleRecovery(){
+  const r = recovery;
+  r.timer = setTimeout(async () => {
+    const ch = findChannel(r.id);
+    const ok = ch && await testStream(ch, RECHECK_TIMEOUT_MS) === true;
+    if(recovery !== r) return;   // cancelled meanwhile (another channel, or the app went to the background)
+    if(ok){
+      recovery = null;
+      selectChannel(ch.id, 'stream');
+      showToast('השידור חזר');
+      return;
+    }
+    if(++r.attempt < RECOVERY_DELAYS_MS.length){
+      scheduleRecovery();
+    } else {
+      recovery = null;
+      if(currentSource !== 'link') showPlayerMessage('השידור של הערוץ הזה לא זמין כרגע', 'mdi:television-off');
+    }
+  }, RECOVERY_DELAYS_MS[r.attempt]);
+}
+
+function cancelRecovery(){
+  if(!recovery) return;
+  clearTimeout(recovery.timer);
+  recovery = null;
+}
+
+/* A stream can also just stop moving without any error - the player keeps
+   "loading" forever. If one that played makes no progress for 15 seconds,
+   it's reloaded; if it stalls again within a minute, it counts as failed
+   (and recovery takes over). */
+const STALL_MS = 15000;
+let streamPlayedSeq = -1;   // the load (loadSeq) that reached 'playing'
+let lastProgressAt = 0;
+let stallReloadAt = 0;
+
+playerVideo.addEventListener('timeupdate', () => { lastProgressAt = Date.now(); });
+setInterval(() => {
+  if(currentSource !== 'stream' || streamPlayedSeq !== loadSeq || playerVideo.paused) return;
+  if(Date.now() - lastProgressAt < STALL_MS) return;
+  const ch = findChannel(currentId);
+  if(!ch) return;
+  if(Date.now() - stallReloadAt < 60000){
+    onStreamFailed(ch);
+  } else {
+    stallReloadAt = Date.now();
+    selectChannel(ch.id, 'stream');
+  }
+}, 5000);
+
+/* ---------- AUTOMATIC RECHECKS ----------
+   Channels whose stream didn't work are checked again every 10 minutes while
+   the site is on screen (and once on coming back to it after that long), so a
+   channel that came back reappears by itself. Only direct streams - a small
+   playlist download each. The rows are redrawn only when nobody is using
+   them (tvBusy, tv.js), so a channel never jumps in under the remote or a
+   finger. */
+const AUTO_RECHECK_MS = 10 * 60 * 1000;
+let lastAutoRecheck = Date.now();
+let renderPending = false;
+
+function autoRecheck(){
+  lastAutoRecheck = Date.now();
+  const failed = [...TV_CHANNELS, ...RADIO_CHANNELS]
+    .filter(c => c.stream && c.streamOk !== true && !testsInFlight.has(c.id));
+  if(!failed.length) return;
+  Promise.all(failed.map(async ch => {
+    testsInFlight.add(ch.id);
+    try {
+      if(await testStream(ch, RECHECK_TIMEOUT_MS) !== true || ch.streamOk) return false;
+      ch.streamOk = true;
+      ch.status = 'ok';
+      return true;
+    } finally {
+      testsInFlight.delete(ch.id);
+    }
+  })).then(changed => {
+    if(!changed.some(Boolean)) return;
+    saveStatuses();
+    renderWhenQuiet();
+  });
+}
+
+function renderWhenQuiet(){
+  if(renderPending) return;
+  renderPending = true;
+  (function attempt(){
+    if(window.tvBusy && tvBusy()){ setTimeout(attempt, 2000); return; }
+    renderPending = false;
+    renderList();
+  })();
+}
+
+setInterval(() => {
+  if(!document.hidden && Date.now() - lastAutoRecheck >= AUTO_RECHECK_MS) autoRecheck();
+}, 60000);
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && Date.now() - lastAutoRecheck >= AUTO_RECHECK_MS) autoRecheck();
 });
 
 // native (Safari) playback errors - hls.js reports its own through Hls.Events.ERROR

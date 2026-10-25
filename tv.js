@@ -1365,6 +1365,17 @@
     return true;
   };
 
+  /* For script.js's automatic rechecks: someone is using the channel rows
+     right now (they're open, and touched / pressed in the last few seconds),
+     so a channel that came back waits before it appears among them. */
+  let lastInputAt = 0;
+  ['keydown', 'pointerdown', 'touchstart', 'wheel'].forEach(type => {
+    window.addEventListener(type, () => { lastInputAt = Date.now(); }, {capture: true, passive: true});
+  });
+  window.tvBusy = function(){
+    return (browseOpen || allMode || searching) && Date.now() - lastInputAt < 8000;
+  };
+
   // channel up/down keys, for remotes that have them (called by the app)
   window.tvChannel = function(step){ tvZap(step); };
 
