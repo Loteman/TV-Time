@@ -1323,10 +1323,15 @@
     if(!typing) setInputMode('remote');
     if(e.key === 'Escape' || e.key === 'GoBack'){
       e.preventDefault();
+      if(typedNumber){ cancelNumber(); return; }
       window.tvBack();
       return;
     }
     if(typing){ onSearchKey(e); return; }
+    if(onNumberKey(e)){
+      e.preventDefault();
+      return;
+    }
     if(keyboardShortcut(e)){
       e.preventDefault();
       return;
@@ -1350,6 +1355,77 @@
     const item = rows[pos.r] && rows[pos.r].items[pos.c];
     if(!p.long && browseOpen && !sheetOpen && item && item.id === p.item.id) play(p.item.ch);
   });
+
+  /* ---------- CHANNEL NUMBERS ----------
+     On the TV, digits on the remote (remotes that have them - a TV's own
+     remote through HDMI-CEC too) type a channel number, shown big on the
+     screen. It plays at once when no other number starts with what was typed,
+     otherwise 1.5 seconds after the last digit, or on OK. The numbers are the
+     channels' own and the stations' whole frequencies (88, 103 - not 91.8);
+     when a channel and a station share one, what's on now decides (99 is the
+     Knesset channel while watching TV, Eco 99 while listening to radio). */
+  const NUMBER_WAIT_MS = 1500;
+  const NUMBER_SHOW_MS = 1500;
+  const numberBox = el('div', 'tv-number');
+  const numberDigits = el('b');
+  const numberName = el('small');
+  numberBox.append(numberDigits, numberName);
+  ui.append(numberBox);
+  let typedNumber = '';
+  let numberTimer = null;
+
+  const channelNumber = ch => ch.remoteNumber != null ? String(ch.remoteNumber)
+                                                      : (/^\d+$/.test(ch.label || '') ? ch.label : '');
+
+  function channelWithNumber(n){
+    const matches = allChannels().filter(c => channelNumber(c) === n);
+    return matches.find(c => isRadio(c) === (mode === 'radio')) || matches[0];
+  }
+
+  function onNumberKey(e){
+    if(!TV_DEVICE || sheetOpen || e.ctrlKey || e.metaKey || e.altKey) return false;
+    if(/^[0-9]$/.test(e.key)){
+      typedNumber = (typedNumber + e.key).slice(-3);
+      showNumber(typedNumber + '_', '');
+      clearTimeout(numberTimer);
+      const longer = allChannels().some(c => channelNumber(c).length > typedNumber.length &&
+                                             channelNumber(c).startsWith(typedNumber));
+      // (a moment even when it's certain, so the number is seen)
+      numberTimer = setTimeout(tuneNumber, !longer && channelWithNumber(typedNumber) ? 400 : NUMBER_WAIT_MS);
+      return true;
+    }
+    if(typedNumber && e.key === 'Enter'){
+      clearTimeout(numberTimer);
+      tuneNumber();
+      return true;
+    }
+    return false;
+  }
+
+  function tuneNumber(){
+    const n = typedNumber;
+    typedNumber = '';
+    const ch = channelWithNumber(n);
+    if(!ch) showNumber(n, 'אין ערוץ ' + n);
+    else if(!ch.stream) showNumber(n, ch.name + ' לא זמין בטלוויזיה');
+    else {
+      showNumber(n, ch.name);
+      play(ch);
+    }
+    numberTimer = setTimeout(() => numberBox.classList.remove('show'), NUMBER_SHOW_MS);
+  }
+
+  function showNumber(digits, name){
+    numberDigits.textContent = digits;
+    numberName.textContent = name;
+    numberBox.classList.add('show');
+  }
+
+  function cancelNumber(){
+    typedNumber = '';
+    clearTimeout(numberTimer);
+    numberBox.classList.remove('show');
+  }
 
   /* Called by the Android app for Back (the remote's, or a phone's) - and Escape here:
      true when the page handled it, false to let the app exit. */

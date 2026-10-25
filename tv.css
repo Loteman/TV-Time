@@ -941,3 +941,24 @@ body.tv-all:not(.tv-touch) .tv-rows{scroll-behavior:smooth;}
 body.tv-mode .site-intro{display:none;}
 /* pinch zoom is allowed (accessibility), a double tap doesn't zoom by accident */
 body.tv-mode{touch-action:manipulation;}
+
+/* a channel number typed on the remote (tv.js), big in the corner like a TV's */
+.tv-number{
+  position:absolute;
+  top:calc(120 * var(--u));   /* under the banner and its clock */
+  left:calc(44 * var(--u));
+  z-index:30;
+  min-width:calc(120 * var(--u));
+  padding:calc(10 * var(--u)) calc(22 * var(--u)) calc(12 * var(--u));
+  border-radius:calc(18 * var(--u));
+  background:rgba(11,14,19,.88);
+  border:calc(2 * var(--u)) solid var(--yellow);
+  text-align:center;
+  opacity:0;
+  transition:opacity .15s;
+  pointer-events:none;
+}
+.tv-number.show{opacity:1;}
+.tv-number b{display:block;direction:ltr;font-size:calc(58 * var(--u));font-weight:900;line-height:1.1;color:#fff;letter-spacing:.06em;}
+.tv-number small{display:block;font-size:calc(18 * var(--u));font-weight:700;color:#c9d0da;}
+.tv-number small:empty{display:none;}
