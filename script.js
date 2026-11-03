@@ -265,11 +265,21 @@ function isUnverifiable(ch){
   return isWrapperUrl(ch.url) || KNOWN_UNRELIABLE_IDS.has(ch.id);
 }
 
+/* Broadcaster pages that forbid being shown inside another site
+   (X-Frame-Options / CSP frame-ancestors - checked 2026-11-03). They still
+   open in a new tab, but are never a fallback in the player: a failed stream
+   there says so and keeps being retried instead of showing a refused page. */
+const NO_EMBED_IDS = new Set(['ch16', 'i24news', 'knesset99', 'kolbarama', 'kolrega', 'kolplay']);
+
+function canEmbed(ch){
+  return !!ch.url && !NO_EMBED_IDS.has(ch.id);
+}
+
 function statusLabel(s, ch){
   if(ch && ch.stream && ch.streamOk && s === 'ok'){
     return 'השידור הישיר נבדק ועובד';
   }
-  if(ch && !ch.url && s === 'blocked'){
+  if(ch && !canEmbed(ch) && s === 'blocked'){
     return 'השידור הישיר לא זמין כרגע, ולערוץ הזה אין אתר משדר לגיבוי';
   }
   let text;
@@ -285,7 +295,7 @@ function statusLabel(s, ch){
     }
   }
   // the status shown is the broadcaster page's, since that's what will open
-  if(ch && ch.stream && ch.streamOk === false){
+  if(ch && ch.stream && ch.streamOk === false && canEmbed(ch)){
     text = 'השידור הישיר לא זמין כרגע, לכן ייפתח אתר המשדר. ' + text;
   }
   return text;
@@ -308,6 +318,7 @@ const LINK_POLL_MS = 50;
 
 function testLink(ch, timeoutMs){
   if(!ch.url) return Promise.resolve(null);   // stream-only channel
+  if(!canEmbed(ch)) return Promise.resolve('blocked');
   if(isUnverifiable(ch)) return Promise.resolve('timeout');
 
   return new Promise(resolve => {
@@ -438,11 +449,25 @@ async function testOneChannel(ch, timeoutMs){
   // broadcaster page - so that's the status that counts. A stream-only
   // channel whose stream is down has nothing to show.
   ch.status = streamOk ? 'ok' : (linkStatus || 'blocked');
+  if(streamOk) streamWorks(ch);
   renderList();
   saveStatuses();
 
   if(streamResult === 'timeout') recheckStream(ch, RECHECK_TRIES);
   if(linkStatus === 'timeout' && !isUnverifiable(ch) && !TV_DEVICE) recheckLink(ch, RECHECK_TRIES);
+}
+
+/* A check found a channel's stream working. If that channel is on its
+   broadcaster's page only because the stream was down, the stream takes
+   over (selectChannel / onStreamFailed set pageInsteadOfStream). */
+function streamWorks(ch){
+  ch.streamOk = true;
+  ch.status = 'ok';
+  if(ch.id === currentId && currentSource === 'link' && pageInsteadOfStream){
+    autoStream = {id: ch.id, at: Date.now()};
+    selectChannel(ch.id, 'stream');
+    showToast('השידור הישיר זמין - עברנו אליו');
+  }
 }
 
 /* A check that was only slow (e.g. while the page itself was loading, or on
@@ -474,8 +499,7 @@ function recheckStream(ch, triesLeft){
     const result = await testStream(ch, RECHECK_TIMEOUT_MS);
     if(result === 'timeout' && triesLeft > 1) recheckStream(ch, triesLeft - 1);
     if(result !== true || ch.streamOk) return;
-    ch.streamOk = true;
-    ch.status = 'ok';
+    streamWorks(ch);
     renderList();
     saveStatuses();
   });
@@ -577,6 +601,11 @@ let loadSeq = 0;            // bumped on every load so callbacks of an older loa
 let streamStartTimer = null;
 let overlayTimer = null;
 let toastTimer = null;
+let pageInsteadOfStream = false;   // see selectChannel / streamWorks
+// the last automatic switch back to a stream (streamWorks / recovery): a
+// stream whose check passes but that won't play doesn't bounce back and forth
+let autoStream = {id: null, at: 0};
+const AUTO_STREAM_GRACE_MS = 60000;
 
 /* Radio has no picture: while a station plays in the direct player, the
    screen shows the station (its equalizer moves while sound plays) instead
@@ -713,19 +742,24 @@ function showPlayerMessage(text, icon){
 
 function onStreamFailed(ch){
   const wasPlaying = streamPlayedSeq === loadSeq;   // it played, then dropped
+  // failed again right after an automatic switch back to it: its check
+  // passes, but it doesn't play - no more automatic tries for now
+  const bounced = autoStream.id === ch.id && Date.now() - autoStream.at < AUTO_STREAM_GRACE_MS;
   ch.streamOk = false;
-  ch.status = ch.url ? (ch.linkStatus || 'timeout') : 'blocked';
+  ch.status = canEmbed(ch) ? (ch.linkStatus || 'timeout') : 'blocked';
   stopPlayback();
-  if(ch.url && !TV_DEVICE){
+  if(canEmbed(ch) && !TV_DEVICE){
     loadingOverlay.classList.remove('hide');
     startLink(ch);
+    pageInsteadOfStream = !bounced;
     showToast('השידור הישיר לא זמין כרגע - עברנו לאתר המשדר');
   } else {
     loadingOverlay.classList.add('hide');
-    showPlayerMessage(wasPlaying ? 'השידור נפל - מנסים להתחבר שוב…' : 'השידור של הערוץ הזה לא זמין כרגע - מנסים שוב…',
+    showPlayerMessage(bounced ? 'השידור של הערוץ הזה לא זמין כרגע'
+                      : wasPlaying ? 'השידור נפל - מנסים להתחבר שוב…' : 'השידור של הערוץ הזה לא זמין כרגע - מנסים שוב…',
                       'mdi:television-off');
   }
-  startRecovery(ch);
+  if(!bounced) startRecovery(ch);
   updateSourceToggle();
   updateVolumeUI();
   renderList();
@@ -776,6 +810,7 @@ function scheduleRecovery(){
     if(recovery !== r) return;   // cancelled meanwhile (another channel, or the app went to the background)
     if(ok){
       recovery = null;
+      autoStream = {id: ch.id, at: Date.now()};
       selectChannel(ch.id, 'stream');
       showToast('השידור חזר');
       return;
@@ -802,7 +837,7 @@ function cancelRecovery(){
 const STALL_MS = 15000;
 let streamPlayedSeq = -1;   // the load (loadSeq) that reached 'playing'
 let lastProgressAt = 0;
-let stallReloadAt = 0;
+let stallReload = {id: null, at: 0};   // the last reload for a stall
 
 playerVideo.addEventListener('timeupdate', () => { lastProgressAt = Date.now(); });
 setInterval(() => {
@@ -810,10 +845,10 @@ setInterval(() => {
   if(Date.now() - lastProgressAt < STALL_MS) return;
   const ch = findChannel(currentId);
   if(!ch) return;
-  if(Date.now() - stallReloadAt < 60000){
+  if(stallReload.id === ch.id && Date.now() - stallReload.at < 60000){
     onStreamFailed(ch);
   } else {
-    stallReloadAt = Date.now();
+    stallReload = {id: ch.id, at: Date.now()};
     selectChannel(ch.id, 'stream');
   }
 }, 5000);
@@ -838,8 +873,7 @@ function autoRecheck(){
     testsInFlight.add(ch.id);
     try {
       if(await testStream(ch, RECHECK_TIMEOUT_MS) !== true || ch.streamOk) return false;
-      ch.streamOk = true;
-      ch.status = 'ok';
+      streamWorks(ch);
       return true;
     } finally {
       testsInFlight.delete(ch.id);
@@ -878,12 +912,17 @@ function selectChannel(id, source){
   const ch = findChannel(id);
   if(!ch) return;
   currentId = id;
+  const asked = source;
   if(!ch.stream) source = 'link';
-  // stream-only, or on the TV itself (no broadcaster pages there): always worth a (re)try
-  else if(!ch.url || TV_DEVICE) source = 'stream';
+  // stream-only (or a page that can't be shown here), or on the TV itself
+  // (no broadcaster pages there): always worth a (re)try
+  else if(!canEmbed(ch) || TV_DEVICE) source = 'stream';
   else if(!source) source = ch.streamOk === false ? 'link' : 'stream';
 
   stopPlayback();
+  // the page only because the stream was down (e.g. at the last check) - not
+  // the viewer's choice: once the stream works again, it takes over
+  pageInsteadOfStream = !asked && source === 'link' && !!ch.stream;
   playerEmpty.style.display = 'none';
   loadingOverlay.classList.remove('hide');
   if(source === 'stream') startStream(ch);
@@ -930,7 +969,7 @@ function setOptionAvailable(opt, available, title){
 function updateSourceToggle(){
   const ch = currentId ? findChannel(currentId) : null;
   const hasStream = !!(ch && ch.stream);
-  const hasLink = !!(ch && ch.url);
+  const hasLink = !!(ch && canEmbed(ch));
   sourceToggle.querySelectorAll('.source-opt').forEach(opt => {
     opt.classList.toggle('active', opt.dataset.source === currentSource);
   });
@@ -939,7 +978,9 @@ function updateSourceToggle(){
     : ch.streamOk === false ? 'השידור הישיר לא זמין כרגע - לחיצה תנסה שוב'
     : STREAM_OPT_TITLE);
   setOptionAvailable(linkOpt, hasLink,
-    hasLink ? LINK_OPT_TITLE : 'אין אתר משדר לערוץ הזה - הוא זמין רק בנגן הישיר');
+    hasLink ? LINK_OPT_TITLE
+    : ch && ch.url ? 'אתר המשדר לא מאפשר להציג אותו בתוך אתר אחר - אפשר לפתוח אותו בטאב חדש'
+    : 'אין אתר משדר לערוץ הזה - הוא זמין רק בנגן הישיר');
 }
 
 sourceToggle.addEventListener('click', (e) => {
@@ -1080,8 +1121,8 @@ function zap(step, favoritesOnly){
   showToast(favoritesOnly ? 'אין ערוצים נוספים במועדפים' : 'אין ערוצים נוספים שמתאימים לסינון הנוכחי');
   return false;
 }
-zapPrev.addEventListener('click', () => zap(1));   // RTL: right = previous in list order
-zapNext.addEventListener('click', () => zap(-1));  // RTL: left = next
+zapPrev.addEventListener('click', () => zap(-1));  // RTL: right = previous in list order
+zapNext.addEventListener('click', () => zap(1));   // RTL: left = next
 
 /* ---------- TABS ---------- */
 function setMode(newMode){
@@ -1379,8 +1420,8 @@ searchMobile.addEventListener('input', e => onSearch(e.target.value));
 document.addEventListener('keydown', (e) => {
   if(TV_MODE) return;   // the remote's arrows are handled by tv.js
   if(e.target.tagName === 'INPUT') return;
-  if(e.key === 'ArrowLeft') zap(-1);
-  if(e.key === 'ArrowRight') zap(1);
+  if(e.key === 'ArrowLeft') zap(1);    // RTL: left = next, as on the arrows
+  if(e.key === 'ArrowRight') zap(-1);
 });
 
 /* ---------- INIT ---------- */

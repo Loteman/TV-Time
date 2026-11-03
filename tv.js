@@ -323,7 +323,7 @@
   function refreshSource(ch){
     const site = currentSource === 'link';
     body.classList.toggle('tv-site', site);
-    const both = !!(ch && ch.stream && ch.url && currentSource);
+    const both = !!(ch && ch.stream && canEmbed(ch) && currentSource);
     sourceBtn.hidden = !both;
     if(both){
       if(site) setButton(sourceBtn, 'mdi:play-circle-outline', 'מעבר לנגן הישיר');
@@ -666,7 +666,9 @@
   // called by script.js's renderList() on any status, favorite or filter change
   window.tvRender = function(){
     const model = rowModel();
-    const signature = model.map(m => m.key + '=' + m.channels.map(c => c.id).join(',')).join('|');
+    // (with no rows, their message is part of it - e.g. the search typed)
+    const signature = model.map(m => m.key + '=' + m.channels.map(c => c.id).join(',')).join('|') ||
+                      'empty:' + emptyRowsText();
     if(signature !== renderedSignature){
       renderedSignature = signature;
       rebuildRows(model);
