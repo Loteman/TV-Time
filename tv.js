@@ -1143,9 +1143,16 @@
       document.getElementById('retestBtn').click();
       showToast('בודק את הערוצים מחדש…');
     }},
+    // the TV's own view (?tv: direct streams only, for the remote) - and back
+    // (not in the app, which is always the one or the other)
+    TV_APP || MOBILE_APP ? null
+    : TV_DEVICE ? {label: 'יציאה מתצוגת טלוויזיה', short: 'תצוגה רגילה', icon: 'mdi:television-classic',
+                   run: () => { location.href = './'; }}
+    : {label: 'עבור לתצוגת טלוויזיה', short: 'טלוויזיה', icon: 'mdi:television-classic',
+       run: () => { location.href = './?tv'; }},
     {label: 'אודות', icon: 'mdi:information-outline', run: () => { location.href = 'about.html'; }},
     {label: 'סגירה', icon: 'mdi:close', run: () => closeSheet()},
-  ].forEach(b => {
+  ].filter(Boolean).forEach(b => {
     const btn = el('div', 'tv-btn');
     btn.append(icon(b.icon), el('span', b.short ? 'tv-label-full' : null, b.label));
     if(b.short) btn.append(el('span', 'tv-label-short', b.short));   // (portrait)
